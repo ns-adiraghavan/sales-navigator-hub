@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell, Search, LogOut,
+  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell,
 } from "lucide-react";
 import { SidebarNavLink } from "@/components/SidebarNavLink";
 import { useApp } from "@/context/AppContext";
@@ -16,7 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useUsers } from "@/hooks/useUsers";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
