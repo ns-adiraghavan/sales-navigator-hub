@@ -79,6 +79,14 @@ const LeadsPage: React.FC = () => {
         </Button>
       </div>
 
+      {/* Pending Actions panel */}
+      <PendingActions
+        nudges={nudges}
+        onScheduleMeeting={handleNudgeSchedule}
+        onUpdatePipeline={handleNudgePipeline}
+        onAddNotes={handleNudgeNotes}
+      />
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         {/* Only elevated roles see the All Leads / My Leads tabs */}
