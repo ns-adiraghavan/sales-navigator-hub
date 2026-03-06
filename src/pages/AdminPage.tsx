@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Shield, Users, Building2, Lock } from "lucide-react";
-import { Navigate } from "react-router-dom";
+
 import { STAGE_COLORS } from "@/lib/constants";
 
 const AdminPage: React.FC = () => {

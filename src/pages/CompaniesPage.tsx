@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Building2, Users, DollarSign, Globe, MapPin, ChevronDown, ChevronUp } from "lucide-react";
-import { formatCurrency as fmt } from "@/lib/constants";
+import { Plus, Search, Building2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
 import { cn } from "@/lib/utils";
 
