@@ -273,7 +273,7 @@ interface MeetingFormModalProps {
 }
 
 export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meeting, defaultDate, onClose, onSave }) => {
-  const { leads, companies } = useApp();
+  const { leads, companies, currentUser } = useApp();
   const [form, setForm] = useState<Partial<Meeting>>(
     meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60 }
   );
@@ -290,6 +290,7 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meetin
       id: meeting?.id || generateId(),
       title: form.title!,
       leadId: form.leadId!,
+      scheduledById: meeting?.scheduledById || currentUser.id,
       date: form.date!,
       time: form.time!,
       duration: form.duration,
