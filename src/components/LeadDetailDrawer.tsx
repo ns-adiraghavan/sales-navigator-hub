@@ -88,7 +88,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          <Tabs defaultValue="overview" className="h-full">
+          <Tabs defaultValue={defaultTab} className="h-full">
             <TabsList className="w-full rounded-none border-b border-border h-10 bg-transparent">
               <TabsTrigger value="overview" className="flex-1 rounded-none text-xs">Overview</TabsTrigger>
               <TabsTrigger value="meetings" className="flex-1 rounded-none text-xs">

@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { SidebarNavLink } from "@/components/SidebarNavLink";
 import { useApp } from "@/context/AppContext";
+import { useNudges } from "@/hooks/useNudges";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -34,6 +35,8 @@ const AppLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { currentUser, setCurrentUser, users } = useApp();
+  const nudges = useNudges();
+  const nudgeCount = nudges.length;
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -73,7 +76,26 @@ const AppLayout: React.FC = () => {
         {/* Nav items */}
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
-            <SidebarNavLink key={item.to} to={item.to} icon={item.icon} label={item.label} collapsed={collapsed} end={item.to === "/"} />
+            <div key={item.to} className="relative">
+              <SidebarNavLink
+                to={item.to}
+                icon={item.icon}
+                label={item.label}
+                collapsed={collapsed}
+                end={item.to === "/"}
+              />
+              {/* Nudge badge on Leads nav item */}
+              {item.to === "/leads" && nudgeCount > 0 && (
+                <span
+                  className={cn(
+                    "absolute top-1.5 flex items-center justify-center rounded-full bg-destructive text-white text-xs font-bold leading-none",
+                    collapsed ? "right-1 w-4 h-4 text-[10px]" : "right-3 min-w-[18px] h-[18px] px-1"
+                  )}
+                >
+                  {nudgeCount > 9 ? "9+" : nudgeCount}
+                </span>
+              )}
+            </div>
           ))}
 
           {(currentUser.role === "admin" || currentUser.role === "management") && (
@@ -145,9 +167,17 @@ const AppLayout: React.FC = () => {
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <Bell size={16} />
-            </Button>
+            {/* Bell with nudge badge */}
+            <div className="relative">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                <Bell size={16} />
+              </Button>
+              {nudgeCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 flex items-center justify-center rounded-full bg-destructive text-white text-[10px] font-bold leading-none pointer-events-none">
+                  {nudgeCount > 9 ? "9+" : nudgeCount}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Avatar className="h-7 w-7">
                 <AvatarFallback className="bg-primary text-white text-xs font-semibold">
