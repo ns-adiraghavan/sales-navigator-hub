@@ -19,12 +19,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
 
 const LeadsPage: React.FC = () => {
-  const { leads, companies, users, currentUser, pipelines, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
+  const { leads, companies, users, currentUser, pipelines, addLead, updateLead, deleteLead, upsertPipeline, meetings, updateMeeting } = useApp();
   const [search, setSearch] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  // leadId to open drawer at a specific tab
+  const [drawerTab, setDrawerTab] = useState<"overview" | "pipeline" | "meetings">("overview");
+  const nudges = useNudges();
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
 
@@ -49,6 +52,19 @@ const LeadsPage: React.FC = () => {
 
   const getLastActivity = (leadId: string) => {
     return leads.find((l) => l.id === leadId)?.updatedAt || "—";
+  };
+
+  // Nudge quick actions
+  const handleNudgeSchedule = (leadId: string) => {
+    setSelectedLeadId(leadId);
+    setDrawerTab("meetings");
+  };
+  const handleNudgePipeline = (leadId: string) => {
+    setSelectedLeadId(leadId);
+    setDrawerTab("pipeline");
+  };
+  const handleNudgeNotes = (_meetingId?: string, leadId?: string) => {
+    if (leadId) { setSelectedLeadId(leadId); setDrawerTab("meetings"); }
   };
 
   return (
