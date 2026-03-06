@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Lead, UserPipeline } from "@/data/types";
-import { PIPELINE_STAGES, STAGE_COLORS, generateId } from "@/lib/constants";
+import { generateId } from "@/lib/constants";
+import { useNudges } from "@/hooks/useNudges";
+import PendingActions from "@/components/PendingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
