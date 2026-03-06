@@ -1,20 +1,20 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Company } from "@/data/types";
-import { STAGE_COLORS, formatCurrency, generateId } from "@/lib/constants";
+import { formatCurrency, generateId } from "@/lib/constants";
+import { STAGE_COLORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Building2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
-import { cn } from "@/lib/utils";
 
 const CompaniesPage: React.FC = () => {
-  const { companies, leads, addCompany } = useApp();
+  const { companies, leads, pipelines, addCompany } = useApp();
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
@@ -45,7 +45,10 @@ const CompaniesPage: React.FC = () => {
       <div className="space-y-3">
         {filtered.map((company) => {
           const compLeads = leads.filter((l) => l.companyId === company.id);
-          const totalValue = compLeads.reduce((s, l) => s + (l.proposalValue || 0), 0);
+          const compPipelineIds = compLeads.map((l) => l.id);
+          const totalValue = pipelines
+            .filter((p) => compPipelineIds.includes(p.leadId))
+            .reduce((s, p) => s + (p.proposalValue || 0), 0);
           const isExpanded = expandedCompany === company.id;
 
           return (
@@ -76,7 +79,7 @@ const CompaniesPage: React.FC = () => {
                     <p className="font-bold text-foreground">{compLeads.length}</p>
                   </div>
                   <div className="text-right hidden md:block">
-                    <p className="text-xs text-muted-foreground">Pipeline Value</p>
+                    <p className="text-xs text-muted-foreground">Total Pipeline</p>
                     <p className="font-bold text-primary">{formatCurrency(totalValue)}</p>
                   </div>
                   {isExpanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
@@ -92,35 +95,50 @@ const CompaniesPage: React.FC = () => {
                       <thead>
                         <tr className="bg-muted/30 border-b border-border">
                           <th className="text-left px-6 py-2.5 text-xs font-medium text-muted-foreground">Prospect</th>
-                          <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Stage</th>
-                          <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Value</th>
                           <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Email</th>
+                          <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Active Pipelines</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {compLeads.map((lead) => (
-                          <tr
-                            key={lead.id}
-                            className="hover:bg-muted/20 cursor-pointer"
-                            onClick={() => setSelectedLeadId(lead.id)}
-                          >
-                            <td className="px-6 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                    {lead.prospectName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium text-foreground">{lead.prospectName}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <Badge className={`text-xs border ${STAGE_COLORS[lead.stage]}`} variant="outline">{lead.stage}</Badge>
-                            </td>
-                            <td className="px-4 py-2.5 font-semibold text-foreground">{formatCurrency(lead.proposalValue)}</td>
-                            <td className="px-4 py-2.5 text-muted-foreground text-xs">{lead.email}</td>
-                          </tr>
-                        ))}
+                        {compLeads.map((lead) => {
+                          const leadPipelines = pipelines.filter((p) => p.leadId === lead.id);
+                          const uniqueStages = [...new Set(leadPipelines.map((p) => p.stage))];
+                          return (
+                            <tr
+                              key={lead.id}
+                              className="hover:bg-muted/20 cursor-pointer"
+                              onClick={() => setSelectedLeadId(lead.id)}
+                            >
+                              <td className="px-6 py-2.5">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                      {lead.prospectName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium text-foreground">{lead.prospectName}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2.5 text-muted-foreground text-xs">{lead.email}</td>
+                              <td className="px-4 py-2.5">
+                                <div className="flex flex-wrap gap-1">
+                                  {uniqueStages.length === 0 ? (
+                                    <span className="text-xs text-muted-foreground">No pipeline</span>
+                                  ) : (
+                                    uniqueStages.map((stage) => (
+                                      <Badge key={stage} className={`text-xs border ${STAGE_COLORS[stage]}`} variant="outline">
+                                        {stage}
+                                      </Badge>
+                                    ))
+                                  )}
+                                  {leadPipelines.length > 1 && (
+                                    <span className="text-xs text-muted-foreground">({leadPipelines.length} threads)</span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   )}
@@ -131,7 +149,6 @@ const CompaniesPage: React.FC = () => {
         })}
       </div>
 
-      {/* Add Company Modal */}
       <AddCompanyModal
         open={showModal}
         onClose={() => setShowModal(false)}
