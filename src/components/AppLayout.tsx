@@ -76,7 +76,7 @@ const AppLayout: React.FC = () => {
             <SidebarNavLink key={item.to} to={item.to} icon={item.icon} label={item.label} collapsed={collapsed} end={item.to === "/"} />
           ))}
 
-          {currentUser.role === "admin" && (
+          {(currentUser.role === "admin" || currentUser.role === "management") && (
             <>
               <div className={cn("my-3 border-t border-sidebar-border", collapsed && "mx-2")} />
               {adminNavItems.map((item) => (

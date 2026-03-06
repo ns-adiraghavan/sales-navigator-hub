@@ -18,7 +18,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 const MeetingsPage: React.FC = () => {
-  const { meetings, leads, companies, currentUser, addMeeting, updateMeeting, deleteMeeting } = useApp();
+  const { meetings, addMeeting, updateMeeting, deleteMeeting } = useApp();
   const [viewMode, setViewMode] = useState<"month" | "week" | "list">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showModal, setShowModal] = useState(false);
@@ -227,9 +227,10 @@ interface MeetingCardProps {
 }
 
 const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, past, onEdit, onDelete }) => {
-  const { leads, companies } = useApp();
+  const { leads, companies, users } = useApp();
   const lead = leads.find((l) => l.id === meeting.leadId);
   const company = companies.find((c) => c.id === lead?.companyId);
+  const scheduler = users.find((u) => u.id === meeting.scheduledById);
 
   return (
     <Card className={cn("shadow-card border-border", past && "opacity-70")}>
@@ -249,8 +250,9 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, past, onEdit, onDele
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                 <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock size={11} />{meeting.time}{meeting.duration ? ` · ${meeting.duration}min` : ""}</span>
                 {lead && <span className="text-xs text-muted-foreground">{lead.prospectName} · {company?.name}</span>}
+                {scheduler && <span className="text-xs text-muted-foreground">by {scheduler.name}</span>}
               </div>
-              {meeting.outcome && <Badge variant="outline" className="mt-2 text-xs bg-green-50 text-green-700 border-green-200">{meeting.outcome}</Badge>}
+              {meeting.outcome && <Badge variant="outline" className="mt-2 text-xs">{meeting.outcome}</Badge>}
               {meeting.minutes && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{meeting.minutes}</p>}
             </div>
           </div>
