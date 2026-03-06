@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Lead, UserPipeline, PipelineStage } from "@/data/types";
+import { Lead, UserPipeline, PipelineStage, Proposal } from "@/data/types";
 import { PIPELINE_STAGES, STAGE_COLORS, formatCurrency, generateId } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Mail, Phone, Linkedin, Calendar, Plus, Building2, DollarSign, Target, Clock, Pencil, User, AlertCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { X, Mail, Phone, Linkedin, Clock, Plus, Building2, Target, Pencil, User, AlertCircle, FileText, Upload, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MeetingFormModal } from "@/pages/MeetingsPage";
 import { Meeting } from "@/data/types";
@@ -20,9 +22,17 @@ interface LeadDetailDrawerProps {
 }
 
 const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) => {
-  const { leads, companies, users, meetings, currentUser, updateLead, addMeeting, updateMeeting, getMyPipeline, getPipelinesForLead, upsertPipeline } = useApp();
+  const {
+    leads, companies, users, meetings, currentUser,
+    updateLead, addMeeting, updateMeeting,
+    getMyPipeline, getPipelinesForLead, upsertPipeline,
+    getProposalsForPipeline, addProposal, updateProposal, deleteProposal,
+  } = useApp();
+
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);
+  const [showAddProposal, setShowAddProposal] = useState(false);
+  const [expandedProposalId, setExpandedProposalId] = useState<string | null>(null);
 
   const lead = leads.find((l) => l.id === leadId);
   if (!lead) return null;
@@ -35,10 +45,10 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
   const myPipeline = getMyPipeline(leadId);
   const allPipelines = isElevated ? getPipelinesForLead(leadId) : [];
+  const myProposals = myPipeline ? getProposalsForPipeline(myPipeline.id) : [];
 
   const handlePipelineStageChange = (stage: PipelineStage) => {
     if (!myPipeline) {
-      // Create a new pipeline thread for the current user
       upsertPipeline({
         id: generateId(),
         leadId,
@@ -50,11 +60,6 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
     } else {
       upsertPipeline({ ...myPipeline, stage, updatedAt: new Date().toISOString().split("T")[0] });
     }
-  };
-
-  const handlePipelineFieldUpdate = (field: keyof UserPipeline, value: unknown) => {
-    if (!myPipeline) return;
-    upsertPipeline({ ...myPipeline, [field]: value, updatedAt: new Date().toISOString().split("T")[0] });
   };
 
   return (
@@ -74,7 +79,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
             </Avatar>
             <div>
               <h2 className="text-lg font-bold text-foreground">{lead.prospectName}</h2>
-              <p className="text-sm text-muted-foreground">{company?.name}</p>
+              <p className="text-sm text-muted-foreground">{company?.name} · {company?.industry}</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}><X size={16} /></Button>
@@ -91,7 +96,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
               <TabsTrigger value="pipeline" className="flex-1 rounded-none text-xs">Pipeline</TabsTrigger>
             </TabsList>
 
-            {/* Overview Tab */}
+            {/* ── Overview Tab ── */}
             <TabsContent value="overview" className="p-6 space-y-5 mt-0">
               <div>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Contact Information</h3>
@@ -145,7 +150,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
               )}
             </TabsContent>
 
-            {/* Meetings Tab */}
+            {/* ── Meetings Tab ── */}
             <TabsContent value="meetings" className="p-6 mt-0 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Meeting History</h3>
@@ -195,11 +200,12 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
               )}
             </TabsContent>
 
-            {/* Pipeline Tab */}
-            <TabsContent value="pipeline" className="p-6 mt-0 space-y-5">
+            {/* ── Pipeline Tab ── */}
+            <TabsContent value="pipeline" className="p-6 mt-0 space-y-6">
               {/* My Pipeline thread */}
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">My Pipeline</h3>
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">My Pipeline</h3>
+
                 {!myPipeline ? (
                   <div className="border border-dashed border-border rounded-lg p-4 text-center space-y-3">
                     <AlertCircle size={20} className="mx-auto text-muted-foreground" />
@@ -207,7 +213,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
                     <Button size="sm" onClick={() => handlePipelineStageChange("New Lead")}>Start My Pipeline</Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <>
                     {/* Stage selector */}
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-2">Stage</p>
@@ -234,48 +240,37 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
                       </div>
                     </div>
 
-                    {/* Revenue fields */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Proposal Value ($)</Label>
-                        <Input
-                          type="number"
-                          value={myPipeline.proposalValue || ""}
-                          onChange={(e) => handlePipelineFieldUpdate("proposalValue", Number(e.target.value))}
-                          placeholder="0"
-                          className="h-8 text-sm"
-                        />
+                    {/* Proposals section */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Proposals</p>
+                        <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={() => setShowAddProposal(true)}>
+                          <Plus size={12} />Add Proposal
+                        </Button>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Expected Revenue ($)</Label>
-                        <Input
-                          type="number"
-                          value={myPipeline.expectedRevenue || ""}
-                          onChange={(e) => handlePipelineFieldUpdate("expectedRevenue", Number(e.target.value))}
-                          placeholder="0"
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                    </div>
 
-                    {/* Value cards */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <ValueCard label="Proposal Value" value={formatCurrency(myPipeline.proposalValue)} icon={DollarSign} color="text-orange-600" bg="bg-orange-50" />
-                      <ValueCard label="Expected Revenue" value={formatCurrency(myPipeline.expectedRevenue)} icon={Target} color="text-green-600" bg="bg-green-50" />
+                      {myProposals.length === 0 ? (
+                        <div className="border border-dashed border-border rounded-lg py-6 text-center">
+                          <FileText size={20} className="mx-auto text-muted-foreground mb-2" />
+                          <p className="text-xs text-muted-foreground">No proposals yet. Add one to track your commercial offer.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {myProposals.map((proposal) => (
+                            <ProposalCard
+                              key={proposal.id}
+                              proposal={proposal}
+                              isExpanded={expandedProposalId === proposal.id}
+                              onToggle={() => setExpandedProposalId(expandedProposalId === proposal.id ? null : proposal.id)}
+                              onUpdate={updateProposal}
+                              onDelete={() => deleteProposal(proposal.id)}
+                              canEdit={currentUser.role === "admin" || proposal.ownerId === currentUser.id}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
-
-                    {myPipeline.probability !== undefined && (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-muted-foreground">Win Probability</span>
-                          <span className="text-sm font-bold">{myPipeline.probability}%</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${myPipeline.probability}%` }} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  </>
                 )}
               </div>
 
@@ -287,8 +282,10 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
                     {allPipelines.map((p) => {
                       const owner = users.find((u) => u.id === p.ownerId);
                       const isMe = p.ownerId === currentUser.id;
+                      const threadProposals = getProposalsForPipeline(p.id);
+                      const totalValue = threadProposals.reduce((s, pr) => s + pr.value, 0);
                       return (
-                        <div key={p.id} className={cn("border border-border rounded-lg p-4 space-y-3", isMe && "border-primary/30 bg-primary/5")}>
+                        <div key={p.id} className={cn("border border-border rounded-lg p-4 space-y-2", isMe && "border-primary/30 bg-primary/5")}>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
                               <AvatarFallback className={cn("text-xs", isMe ? "bg-primary text-white" : "bg-secondary text-secondary-foreground")}>
@@ -298,18 +295,14 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
                             <span className="text-sm font-semibold">{owner?.name}{isMe && " (You)"}</span>
                             <Badge className={`ml-auto text-xs border ${STAGE_COLORS[p.stage]}`} variant="outline">{p.stage}</Badge>
                           </div>
-                          <div className="grid grid-cols-3 gap-3 text-xs">
+                          <div className="grid grid-cols-2 gap-3 text-xs">
                             <div>
-                              <p className="text-muted-foreground">Proposal Value</p>
-                              <p className="font-semibold text-foreground">{formatCurrency(p.proposalValue)}</p>
+                              <p className="text-muted-foreground">Proposals</p>
+                              <p className="font-semibold text-foreground">{threadProposals.length}</p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground">Expected</p>
-                              <p className="font-semibold text-foreground">{formatCurrency(p.expectedRevenue)}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Probability</p>
-                              <p className="font-semibold text-foreground">{p.probability !== undefined ? `${p.probability}%` : "—"}</p>
+                              <p className="text-muted-foreground">Total Value</p>
+                              <p className="font-semibold text-foreground">{formatCurrency(totalValue)}</p>
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground">Updated {p.updatedAt}</p>
@@ -324,6 +317,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
         </div>
       </div>
 
+      {/* Meeting modal */}
       <MeetingFormModal
         open={showMeetingModal}
         meeting={editMeeting}
@@ -336,27 +330,265 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
           setEditMeeting(null);
         }}
       />
+
+      {/* Add Proposal modal */}
+      {myPipeline && (
+        <AddProposalModal
+          open={showAddProposal}
+          pipelineId={myPipeline.id}
+          leadId={leadId}
+          ownerId={currentUser.id}
+          currentStage={myPipeline.stage}
+          onClose={() => setShowAddProposal(false)}
+          onSave={(proposal) => {
+            addProposal(proposal);
+            setShowAddProposal(false);
+          }}
+        />
+      )}
     </>
   );
 };
 
-const InfoRow: React.FC<{ icon: React.ElementType; label: string; value: string; href?: string }> = ({ icon: Icon, label, value, href }) => (
-  <div className="flex items-center gap-3">
-    <Icon size={14} className="text-muted-foreground shrink-0" />
-    <span className="text-xs text-muted-foreground w-16 shrink-0">{label}</span>
-    {href ? (
-      <a href={href} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline truncate">{value}</a>
-    ) : (
-      <span className="text-sm text-foreground truncate">{value}</span>
-    )}
-  </div>
-);
+// ── Proposal Card ──────────────────────────────────────────────────────────────
+interface ProposalCardProps {
+  proposal: Proposal;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onUpdate: (p: Proposal) => void;
+  onDelete: () => void;
+  canEdit: boolean;
+}
 
-const ValueCard: React.FC<{ label: string; value: string; icon: React.ElementType; color: string; bg: string }> = ({ label, value, icon: Icon, color, bg }) => (
-  <div className={`rounded-lg p-3 ${bg}`}>
-    <Icon size={16} className={`${color} mb-2`} />
-    <p className={`text-lg font-bold ${color}`}>{value}</p>
-    <p className="text-xs text-muted-foreground">{label}</p>
+const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isExpanded, onToggle, onUpdate, onDelete, canEdit }) => {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState(proposal);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const updated = { ...proposal, attachmentName: file.name, attachmentUrl: url, updatedAt: new Date().toISOString().split("T")[0] };
+    onUpdate(updated);
+  };
+
+  const handleSave = () => {
+    onUpdate({ ...form, updatedAt: new Date().toISOString().split("T")[0] });
+    setEditing(false);
+  };
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      {/* Header row */}
+      <div
+        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/20 transition-colors"
+        onClick={onToggle}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <FileText size={14} className="text-muted-foreground shrink-0" />
+          <span className="text-sm font-medium text-foreground truncate">{proposal.title}</span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          <span className="text-sm font-bold text-primary">{formatCurrency(proposal.value)}</span>
+          <Badge className={`text-xs border ${STAGE_COLORS[proposal.stage]}`} variant="outline">{proposal.stage}</Badge>
+          {isExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+        </div>
+      </div>
+
+      {/* Expanded content */}
+      {isExpanded && (
+        <div className="border-t border-border px-4 py-3 space-y-3 bg-muted/10">
+          {!editing ? (
+            <>
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                <div>
+                  <p className="text-muted-foreground">Value</p>
+                  <p className="font-semibold">{formatCurrency(proposal.value)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Expected</p>
+                  <p className="font-semibold">{formatCurrency(proposal.expectedRevenue)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Probability</p>
+                  <p className="font-semibold">{proposal.probability !== undefined ? `${proposal.probability}%` : "—"}</p>
+                </div>
+              </div>
+              {proposal.notes && (
+                <p className="text-xs text-muted-foreground bg-muted/40 rounded px-3 py-2">{proposal.notes}</p>
+              )}
+              <p className="text-xs text-muted-foreground">Created {proposal.createdAt}</p>
+
+              {/* Attachment */}
+              {proposal.attachmentName ? (
+                <a
+                  href={proposal.attachmentUrl}
+                  download={proposal.attachmentName}
+                  className="flex items-center gap-2 text-xs text-primary hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <FileText size={12} />{proposal.attachmentName}
+                </a>
+              ) : (
+                proposal.stage === "Proposal Sent" && canEdit && (
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors">
+                    <Upload size={12} />
+                    <span>Upload proposal deck</span>
+                    <input type="file" className="hidden" accept=".pdf,.pptx,.docx,.ppt" onChange={handleFileUpload} />
+                  </label>
+                )
+              )}
+
+              {canEdit && (
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" variant="outline" className="h-6 text-xs gap-1" onClick={() => { setForm(proposal); setEditing(true); }}>
+                    <Pencil size={10} />Edit
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-6 text-xs gap-1 text-destructive hover:text-destructive" onClick={onDelete}>
+                    <Trash2 size={10} />Delete
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Title</Label>
+                <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="h-8 text-xs" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Proposal Value ($)</Label>
+                  <Input type="number" value={form.value} onChange={(e) => setForm((f) => ({ ...f, value: Number(e.target.value) }))} className="h-8 text-xs" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Expected Revenue ($)</Label>
+                  <Input type="number" value={form.expectedRevenue} onChange={(e) => setForm((f) => ({ ...f, expectedRevenue: Number(e.target.value) }))} className="h-8 text-xs" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Stage</Label>
+                  <Select value={form.stage} onValueChange={(v) => setForm((f) => ({ ...f, stage: v as PipelineStage }))}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>{PIPELINE_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Probability (%)</Label>
+                  <Input type="number" min={0} max={100} value={form.probability ?? ""} onChange={(e) => setForm((f) => ({ ...f, probability: Number(e.target.value) }))} className="h-8 text-xs" placeholder="0–100" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Notes</Label>
+                <Textarea value={form.notes || ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs" />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" className="h-7 text-xs" onClick={handleSave}>Save</Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEditing(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Add Proposal Modal ─────────────────────────────────────────────────────────
+interface AddProposalModalProps {
+  open: boolean;
+  pipelineId: string;
+  leadId: string;
+  ownerId: string;
+  currentStage: PipelineStage;
+  onClose: () => void;
+  onSave: (proposal: Proposal) => void;
+}
+
+const AddProposalModal: React.FC<AddProposalModalProps> = ({ open, pipelineId, leadId, ownerId, currentStage, onClose, onSave }) => {
+  const today = new Date().toISOString().split("T")[0];
+  const [form, setForm] = useState<Partial<Proposal>>({ stage: currentStage, value: 0, expectedRevenue: 0, probability: 50 });
+
+  const set = <K extends keyof Proposal>(k: K, v: Proposal[K]) => setForm((p) => ({ ...p, [k]: v }));
+
+  const handleSave = () => {
+    if (!form.title) return;
+    onSave({
+      id: generateId(),
+      pipelineId,
+      leadId,
+      ownerId,
+      title: form.title!,
+      value: form.value || 0,
+      stage: form.stage || currentStage,
+      probability: form.probability,
+      expectedRevenue: form.expectedRevenue || 0,
+      notes: form.notes,
+      createdAt: today,
+      updatedAt: today,
+    });
+    setForm({ stage: currentStage, value: 0, expectedRevenue: 0, probability: 50 });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md z-[60]">
+        <DialogHeader>
+          <DialogTitle>Add Proposal</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>Proposal Title *</Label>
+            <Input value={form.title || ""} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Enterprise Platform - Phase 1" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Proposal Value ($)</Label>
+              <Input type="number" value={form.value || ""} onChange={(e) => set("value", Number(e.target.value))} placeholder="0" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Expected Revenue ($)</Label>
+              <Input type="number" value={form.expectedRevenue || ""} onChange={(e) => set("expectedRevenue", Number(e.target.value))} placeholder="0" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Stage</Label>
+              <Select value={form.stage} onValueChange={(v) => set("stage", v as PipelineStage)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{PIPELINE_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Probability (%)</Label>
+              <Input type="number" min={0} max={100} value={form.probability ?? ""} onChange={(e) => set("probability", Number(e.target.value))} placeholder="50" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Notes</Label>
+            <Textarea value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} placeholder="Proposal context, terms, conditions..." rows={3} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSave} disabled={!form.title}>Add Proposal</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const InfoRow: React.FC<{ icon: React.ElementType; label: string; value: string; href?: string }> = ({ icon: Icon, label, value, href }) => (
+  <div className="flex items-center gap-3 text-sm">
+    <Icon size={14} className="text-muted-foreground shrink-0" />
+    <span className="text-muted-foreground w-20 shrink-0">{label}</span>
+    {href ? (
+      <a href={href} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">{value}</a>
+    ) : (
+      <span className="text-foreground truncate">{value}</span>
+    )}
   </div>
 );
 

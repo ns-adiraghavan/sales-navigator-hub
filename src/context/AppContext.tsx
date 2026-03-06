@@ -24,11 +24,14 @@ interface AppState {
   deleteUser: (id: string) => void;
   updateProposal: (proposal: Proposal) => void;
   addProposal: (proposal: Proposal) => void;
+  deleteProposal: (id: string) => void;
   upsertPipeline: (pipeline: UserPipeline) => void;
   /** Returns the current user's pipeline for a given lead, or undefined */
   getMyPipeline: (leadId: string) => UserPipeline | undefined;
   /** Returns ALL pipelines for a lead (for management/admin) */
   getPipelinesForLead: (leadId: string) => UserPipeline[];
+  /** Returns proposals for a given pipeline thread */
+  getProposalsForPipeline: (pipelineId: string) => Proposal[];
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -64,6 +67,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addProposal = (proposal: Proposal) => setProposals((prev) => [...prev, proposal]);
   const updateProposal = (proposal: Proposal) =>
     setProposals((prev) => prev.map((p) => (p.id === proposal.id ? proposal : p)));
+  const deleteProposal = (id: string) => setProposals((prev) => prev.filter((p) => p.id !== id));
 
   const upsertPipeline = (pipeline: UserPipeline) => {
     setPipelines((prev) => {
@@ -79,6 +83,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const getPipelinesForLead = (leadId: string): UserPipeline[] =>
     pipelines.filter((p) => p.leadId === leadId);
 
+  const getProposalsForPipeline = (pipelineId: string): Proposal[] =>
+    proposals.filter((p) => p.pipelineId === pipelineId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
   return (
     <AppContext.Provider
       value={{
@@ -88,8 +95,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addMeeting, updateMeeting, deleteMeeting,
         addCompany, updateCompany,
         addUser, updateUser, deleteUser,
-        addProposal, updateProposal,
-        upsertPipeline, getMyPipeline, getPipelinesForLead,
+        addProposal, updateProposal, deleteProposal,
+        upsertPipeline, getMyPipeline, getPipelinesForLead, getProposalsForPipeline,
       }}
     >
       {children}
