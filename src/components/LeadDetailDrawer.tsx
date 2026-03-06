@@ -19,9 +19,10 @@ import { Meeting } from "@/data/types";
 interface LeadDetailDrawerProps {
   leadId: string;
   onClose: () => void;
+  defaultTab?: "overview" | "meetings" | "pipeline";
 }
 
-const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) => {
+const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, defaultTab = "overview" }) => {
   const {
     leads, companies, users, meetings, currentUser,
     updateLead, addMeeting, updateMeeting,
@@ -87,7 +88,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) 
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          <Tabs defaultValue="overview" className="h-full">
+          <Tabs defaultValue={defaultTab} className="h-full">
             <TabsList className="w-full rounded-none border-b border-border h-10 bg-transparent">
               <TabsTrigger value="overview" className="flex-1 rounded-none text-xs">Overview</TabsTrigger>
               <TabsTrigger value="meetings" className="flex-1 rounded-none text-xs">

@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Lead, UserPipeline } from "@/data/types";
-import { PIPELINE_STAGES, STAGE_COLORS, generateId } from "@/lib/constants";
+import { generateId } from "@/lib/constants";
+import { useNudges } from "@/hooks/useNudges";
+import PendingActions from "@/components/PendingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +25,9 @@ const LeadsPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  // leadId to open drawer at a specific tab
+  const [drawerTab, setDrawerTab] = useState<"overview" | "pipeline" | "meetings">("overview");
+  const nudges = useNudges();
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
 
@@ -49,6 +54,19 @@ const LeadsPage: React.FC = () => {
     return leads.find((l) => l.id === leadId)?.updatedAt || "—";
   };
 
+  // Nudge quick actions
+  const handleNudgeSchedule = (leadId: string) => {
+    setSelectedLeadId(leadId);
+    setDrawerTab("meetings");
+  };
+  const handleNudgePipeline = (leadId: string) => {
+    setSelectedLeadId(leadId);
+    setDrawerTab("pipeline");
+  };
+  const handleNudgeNotes = (_meetingId?: string, leadId?: string) => {
+    if (leadId) { setSelectedLeadId(leadId); setDrawerTab("meetings"); }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -60,6 +78,14 @@ const LeadsPage: React.FC = () => {
           <Plus size={16} />New Lead
         </Button>
       </div>
+
+      {/* Pending Actions panel */}
+      <PendingActions
+        nudges={nudges}
+        onScheduleMeeting={handleNudgeSchedule}
+        onUpdatePipeline={handleNudgePipeline}
+        onAddNotes={handleNudgeNotes}
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
@@ -200,7 +226,11 @@ const LeadsPage: React.FC = () => {
 
       {/* Lead Detail Drawer */}
       {selectedLeadId && (
-        <LeadDetailDrawer leadId={selectedLeadId} onClose={() => setSelectedLeadId(null)} />
+        <LeadDetailDrawer
+          leadId={selectedLeadId}
+          defaultTab={drawerTab}
+          onClose={() => { setSelectedLeadId(null); setDrawerTab("overview"); }}
+        />
       )}
     </div>
   );
