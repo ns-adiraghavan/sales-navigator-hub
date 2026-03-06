@@ -191,7 +191,7 @@ const LeadsPage: React.FC = () => {
         onClose={() => { setShowCreateModal(false); setEditLead(null); }}
         onSave={(lead, pipeline) => {
           if (editLead) updateLead(lead);
-          else addLead(lead);
+          else { addLead(lead); if (pipeline) upsertPipeline(pipeline); }
           setShowCreateModal(false);
           setEditLead(null);
         }}
