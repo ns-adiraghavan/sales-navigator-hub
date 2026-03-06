@@ -226,7 +226,11 @@ const LeadsPage: React.FC = () => {
 
       {/* Lead Detail Drawer */}
       {selectedLeadId && (
-        <LeadDetailDrawer leadId={selectedLeadId} onClose={() => setSelectedLeadId(null)} />
+        <LeadDetailDrawer
+          leadId={selectedLeadId}
+          defaultTab={drawerTab}
+          onClose={() => { setSelectedLeadId(null); setDrawerTab("overview"); }}
+        />
       )}
     </div>
   );
