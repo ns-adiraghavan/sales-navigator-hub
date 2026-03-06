@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { formatCurrency, STAGE_COLORS } from "@/lib/constants";
+import { formatCurrency } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, Send, User, BarChart2, List, Hash } from "lucide-react";
+import { MessageSquare, Send, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PipelineStage } from "@/data/types";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -39,7 +38,7 @@ const SUGGESTED_QUERIES = [
 ];
 
 const ChatPage: React.FC = () => {
-  const { leads, companies, meetings, proposals, users } = useApp();
+  const { leads, companies, meetings, pipelines, users } = useApp();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -67,7 +66,10 @@ const ChatPage: React.FC = () => {
         data: {
           type: "list",
           count: compLeads.length,
-          items: compLeads.map((l) => ({ Prospect: l.prospectName, Stage: l.stage, Value: formatCurrency(l.proposalValue) })),
+          items: compLeads.map((l) => {
+            const myPipeline = pipelines.find((p) => p.leadId === l.id);
+            return { Prospect: l.prospectName, Stage: myPipeline?.stage || "No Pipeline", Value: formatCurrency(myPipeline?.proposalValue) };
+          }),
           label: `Leads for ${companyMatch.name}`,
         },
       };
@@ -75,16 +77,16 @@ const ChatPage: React.FC = () => {
 
     // Total pipeline value
     if (q.includes("total") && (q.includes("pipeline") || q.includes("proposal value") || q.includes("deal value"))) {
-      const total = leads.reduce((s, l) => s + (l.proposalValue || 0), 0);
+      const total = pipelines.reduce((s, p) => s + (p.proposalValue || 0), 0);
       return {
-        text: `The **total pipeline value** is **${formatCurrency(total)}** across ${leads.length} leads.`,
+        text: `The **total pipeline value** is **${formatCurrency(total)}** across ${pipelines.length} pipeline threads.`,
         data: { type: "value", value: formatCurrency(total), label: "Total Pipeline Value" },
       };
     }
 
     // Revenue forecast
     if (q.includes("forecast") || q.includes("expected revenue")) {
-      const total = leads.reduce((s, l) => s + (l.expectedRevenue || 0), 0);
+      const total = pipelines.reduce((s, p) => s + (p.expectedRevenue || 0), 0);
       return {
         text: `The **total revenue forecast** is **${formatCurrency(total)}**, weighted by probability across all active deals.`,
         data: { type: "value", value: formatCurrency(total), label: "Revenue Forecast" },
@@ -102,18 +104,21 @@ const ChatPage: React.FC = () => {
           items: weekMeetings.map((m) => {
             const lead = leads.find((l) => l.id === m.leadId);
             const company = companies.find((c) => c.id === lead?.companyId);
-            return { Title: m.title, Date: m.date, Time: m.time, Lead: lead?.prospectName || "—", Company: company?.name || "—" };
+            const scheduler = users.find((u) => u.id === m.scheduledById);
+            return { Title: m.title, Date: m.date, Time: m.time, Lead: lead?.prospectName || "—", Company: company?.name || "—", "Scheduled By": scheduler?.name || "—" };
           }),
           label: "Meetings This Week",
         },
       };
     }
 
-    // Stage-specific leads
+    // Stage-specific leads (via pipelines)
     const stages: PipelineStage[] = ["New Lead", "Contacted", "Discovery", "Proposal Sent", "Negotiation", "Closed Won", "Closed Lost"];
     const matchedStage = stages.find((s) => q.includes(s.toLowerCase()));
     if (matchedStage && q.includes("lead")) {
-      const stageLeads = leads.filter((l) => l.stage === matchedStage);
+      const stagePipelines = pipelines.filter((p) => p.stage === matchedStage);
+      const stageLeadIds = new Set(stagePipelines.map((p) => p.leadId));
+      const stageLeads = leads.filter((l) => stageLeadIds.has(l.id));
       return {
         text: `There are **${stageLeads.length} lead(s)** in the **${matchedStage}** stage.`,
         data: {
@@ -121,7 +126,9 @@ const ChatPage: React.FC = () => {
           count: stageLeads.length,
           items: stageLeads.map((l) => {
             const company = companies.find((c) => c.id === l.companyId);
-            return { Prospect: l.prospectName, Company: company?.name || "—", Value: formatCurrency(l.proposalValue) };
+            const p = stagePipelines.find((p) => p.leadId === l.id);
+            const owner = users.find((u) => u.id === p?.ownerId);
+            return { Prospect: l.prospectName, Company: company?.name || "—", Owner: owner?.name || "—", Value: formatCurrency(p?.proposalValue) };
           }),
           label: `${matchedStage} Leads`,
         },
@@ -130,15 +137,17 @@ const ChatPage: React.FC = () => {
 
     // Closed won
     if (q.includes("closed won") || (q.includes("won") && q.includes("deal"))) {
-      const wonLeads = leads.filter((l) => l.stage === "Closed Won");
-      const wonValue = wonLeads.reduce((s, l) => s + (l.proposalValue || 0), 0);
+      const wonPipelines = pipelines.filter((p) => p.stage === "Closed Won");
+      const wonValue = wonPipelines.reduce((s, p) => s + (p.proposalValue || 0), 0);
       return {
-        text: `We have **${wonLeads.length} Closed Won** deal(s) worth **${formatCurrency(wonValue)}** total.`,
+        text: `We have **${wonPipelines.length} Closed Won** pipeline thread(s) worth **${formatCurrency(wonValue)}** total.`,
         data: {
           type: "list",
-          items: wonLeads.map((l) => {
-            const company = companies.find((c) => c.id === l.companyId);
-            return { Prospect: l.prospectName, Company: company?.name || "—", Value: formatCurrency(l.proposalValue) };
+          items: wonPipelines.map((p) => {
+            const lead = leads.find((l) => l.id === p.leadId);
+            const company = companies.find((c) => c.id === lead?.companyId);
+            const owner = users.find((u) => u.id === p.ownerId);
+            return { Prospect: lead?.prospectName || "—", Company: company?.name || "—", Owner: owner?.name || "—", Value: formatCurrency(p.proposalValue) };
           }),
           label: "Closed Won Deals",
         },
@@ -147,10 +156,10 @@ const ChatPage: React.FC = () => {
 
     // Average deal size
     if (q.includes("average") && (q.includes("deal") || q.includes("value") || q.includes("size"))) {
-      const withValue = leads.filter((l) => (l.proposalValue || 0) > 0);
-      const avg = withValue.length ? withValue.reduce((s, l) => s + (l.proposalValue || 0), 0) / withValue.length : 0;
+      const withValue = pipelines.filter((p) => (p.proposalValue || 0) > 0);
+      const avg = withValue.length ? withValue.reduce((s, p) => s + (p.proposalValue || 0), 0) / withValue.length : 0;
       return {
-        text: `The **average deal size** is **${formatCurrency(avg)}** based on ${withValue.length} leads with a proposal value.`,
+        text: `The **average deal size** is **${formatCurrency(avg)}** based on ${withValue.length} pipeline threads with a proposal value.`,
         data: { type: "value", value: formatCurrency(avg), label: "Average Deal Size" },
       };
     }
@@ -167,7 +176,7 @@ const ChatPage: React.FC = () => {
     if (q.includes("stage") || q.includes("pipeline breakdown") || q.includes("chart")) {
       const stageData = stages.map((stage) => ({
         name: stage.split(" ")[0],
-        value: leads.filter((l) => l.stage === stage).reduce((s, l) => s + (l.proposalValue || 0), 0),
+        value: pipelines.filter((p) => p.stage === stage).reduce((s, p) => s + (p.proposalValue || 0), 0),
       }));
       return {
         text: `Here's a breakdown of your pipeline value by stage:`,
@@ -223,7 +232,6 @@ const ChatPage: React.FC = () => {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <div className="hidden lg:flex flex-col w-64 border-r border-border p-4 space-y-3 overflow-y-auto">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggested Queries</p>
           {SUGGESTED_QUERIES.map((q) => (
@@ -237,7 +245,6 @@ const ChatPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Chat area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg) => (
@@ -276,7 +283,6 @@ const ChatPage: React.FC = () => {
             )}
           </div>
 
-          {/* Input */}
           <div className="p-4 border-t border-border">
             <div className="flex gap-3">
               <Input

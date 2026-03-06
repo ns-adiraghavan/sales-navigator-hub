@@ -12,11 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Shield, Users, Building2, Lock } from "lucide-react";
-
 import { STAGE_COLORS } from "@/lib/constants";
 
+const ROLE_BADGE: Record<UserRole, { label: string; className: string }> = {
+  admin: { label: "Admin", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  management: { label: "Management", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  user: { label: "User", className: "bg-secondary text-secondary-foreground border-border" },
+};
+
 const AdminPage: React.FC = () => {
-  const { currentUser, users, leads, companies, addUser, updateUser, deleteUser, addCompany } = useApp();
+  const { currentUser, users, leads, companies, pipelines, addUser, updateUser, deleteUser } = useApp();
   const [showUserModal, setShowUserModal] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
 
@@ -31,6 +36,7 @@ const AdminPage: React.FC = () => {
   }
 
   const adminUsers = users.filter((u) => u.role === "admin");
+  const managementUsers = users.filter((u) => u.role === "management");
   const regularUsers = users.filter((u) => u.role === "user");
 
   return (
@@ -85,13 +91,14 @@ const AdminPage: React.FC = () => {
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Email</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Role</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Department</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Leads</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Pipelines</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {users.map((user) => {
-                      const userLeads = leads.filter((l) => l.ownerId === user.id);
+                      const userPipelines = pipelines.filter((p) => p.ownerId === user.id);
+                      const rb = ROLE_BADGE[user.role];
                       return (
                         <tr key={user.id} className="hover:bg-muted/20 transition-colors">
                           <td className="px-4 py-3">
@@ -107,12 +114,12 @@ const AdminPage: React.FC = () => {
                           </td>
                           <td className="px-4 py-3 text-muted-foreground text-xs">{user.email}</td>
                           <td className="px-4 py-3">
-                            <Badge variant={user.role === "admin" ? "default" : "secondary"} className="text-xs">
-                              {user.role}
+                            <Badge variant="outline" className={`text-xs border ${rb.className}`}>
+                              {rb.label}
                             </Badge>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{user.department || "—"}</td>
-                          <td className="px-4 py-3 font-medium">{userLeads.length}</td>
+                          <td className="px-4 py-3 font-medium">{userPipelines.length}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditUser(user); setShowUserModal(true); }}>
@@ -130,6 +137,13 @@ const AdminPage: React.FC = () => {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Role legend */}
+              <div className="px-4 py-3 border-t border-border bg-muted/20 flex flex-wrap gap-4 text-xs text-muted-foreground">
+                <span><strong className="text-foreground">User:</strong> Manage own leads & pipeline</span>
+                <span><strong className="text-foreground">Management:</strong> View all leads, all pipelines, all meetings</span>
+                <span><strong className="text-foreground">Admin:</strong> Everything + edit any record, manage users</span>
               </div>
             </CardContent>
           </Card>
@@ -180,7 +194,7 @@ const AdminPage: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* All leads tab */}
+        {/* All leads tab — admin sees all pipelines too */}
         <TabsContent value="leads" className="mt-4">
           <Card className="shadow-card border-border overflow-hidden">
             <CardHeader className="pb-3">
@@ -192,33 +206,35 @@ const AdminPage: React.FC = () => {
                   <tr className="bg-muted/50 border-b border-border">
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Prospect</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Company</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Owner</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Stage</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Value</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Email</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Pipeline Threads</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase">Updated</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {leads.map((lead) => {
                     const company = companies.find((c) => c.id === lead.companyId);
-                    const owner = users.find((u) => u.id === lead.ownerId);
+                    const leadPipelines = pipelines.filter((p) => p.leadId === lead.id);
                     return (
                       <tr key={lead.id} className="hover:bg-muted/20">
                         <td className="px-4 py-3 font-medium">{lead.prospectName}</td>
                         <td className="px-4 py-3 text-muted-foreground">{company?.name}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">{lead.email}</td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            <Avatar className="h-5 w-5">
-                              <AvatarFallback className="text-xs bg-secondary">{owner?.avatar}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs text-muted-foreground">{owner?.name}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {leadPipelines.length === 0 ? (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            ) : (
+                              leadPipelines.map((p) => {
+                                const owner = users.find((u) => u.id === p.ownerId);
+                                return (
+                                  <Badge key={p.id} className={`text-xs border ${STAGE_COLORS[p.stage]}`} variant="outline">
+                                    {owner?.name.split(" ")[0]}: {p.stage}
+                                  </Badge>
+                                );
+                              })
+                            )}
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge className={`text-xs border ${STAGE_COLORS[lead.stage]}`} variant="outline">{lead.stage}</Badge>
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold">
-                          {lead.proposalValue ? `$${(lead.proposalValue / 1000).toFixed(0)}K` : "—"}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground text-xs">{lead.updatedAt}</td>
                       </tr>
@@ -298,6 +314,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ open, user, onClose, onSa
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="management">Management</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>

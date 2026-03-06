@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
-import { User, Lead, Company, Meeting, Proposal } from "@/data/types";
-import { CURRENT_USER, USERS, COMPANIES, LEADS, MEETINGS, PROPOSALS } from "@/data/mockData";
+import { User, Lead, Company, Meeting, Proposal, UserPipeline } from "@/data/types";
+import { CURRENT_USER, USERS, COMPANIES, LEADS, MEETINGS, PROPOSALS, USER_PIPELINES } from "@/data/mockData";
 
 interface AppState {
   currentUser: User;
@@ -9,6 +9,7 @@ interface AppState {
   leads: Lead[];
   meetings: Meeting[];
   proposals: Proposal[];
+  pipelines: UserPipeline[];
   setCurrentUser: (u: User) => void;
   addLead: (lead: Lead) => void;
   updateLead: (lead: Lead) => void;
@@ -23,6 +24,11 @@ interface AppState {
   deleteUser: (id: string) => void;
   updateProposal: (proposal: Proposal) => void;
   addProposal: (proposal: Proposal) => void;
+  upsertPipeline: (pipeline: UserPipeline) => void;
+  /** Returns the current user's pipeline for a given lead, or undefined */
+  getMyPipeline: (leadId: string) => UserPipeline | undefined;
+  /** Returns ALL pipelines for a lead (for management/admin) */
+  getPipelinesForLead: (leadId: string) => UserPipeline[];
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -34,6 +40,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [leads, setLeads] = useState<Lead[]>(LEADS);
   const [meetings, setMeetings] = useState<Meeting[]>(MEETINGS);
   const [proposals, setProposals] = useState<Proposal[]>(PROPOSALS);
+  const [pipelines, setPipelines] = useState<UserPipeline[]>(USER_PIPELINES);
 
   const addLead = (lead: Lead) => setLeads((prev) => [...prev, lead]);
   const updateLead = (lead: Lead) =>
@@ -58,16 +65,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateProposal = (proposal: Proposal) =>
     setProposals((prev) => prev.map((p) => (p.id === proposal.id ? proposal : p)));
 
+  const upsertPipeline = (pipeline: UserPipeline) => {
+    setPipelines((prev) => {
+      const exists = prev.find((p) => p.id === pipeline.id);
+      if (exists) return prev.map((p) => (p.id === pipeline.id ? pipeline : p));
+      return [...prev, pipeline];
+    });
+  };
+
+  const getMyPipeline = (leadId: string): UserPipeline | undefined =>
+    pipelines.find((p) => p.leadId === leadId && p.ownerId === currentUser.id);
+
+  const getPipelinesForLead = (leadId: string): UserPipeline[] =>
+    pipelines.filter((p) => p.leadId === leadId);
+
   return (
     <AppContext.Provider
       value={{
-        currentUser, users, companies, leads, meetings, proposals,
+        currentUser, users, companies, leads, meetings, proposals, pipelines,
         setCurrentUser,
         addLead, updateLead, deleteLead,
         addMeeting, updateMeeting, deleteMeeting,
         addCompany, updateCompany,
         addUser, updateUser, deleteUser,
         addProposal, updateProposal,
+        upsertPipeline, getMyPipeline, getPipelinesForLead,
       }}
     >
       {children}

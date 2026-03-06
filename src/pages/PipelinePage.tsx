@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Lead, PipelineStage } from "@/data/types";
-import { PIPELINE_STAGES, STAGE_COLORS, STAGE_DOT, formatCurrency } from "@/lib/constants";
+import { UserPipeline, PipelineStage } from "@/data/types";
+import { PIPELINE_STAGES, STAGE_COLORS, STAGE_DOT, formatCurrency, generateId } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -14,26 +14,33 @@ import {
 } from "recharts";
 
 const PipelinePage: React.FC = () => {
-  const { leads, companies, users, currentUser, updateLead } = useApp();
+  const { leads, companies, users, currentUser, pipelines, upsertPipeline } = useApp();
   const [viewMode, setViewMode] = useState<"kanban" | "table" | "chart">("kanban");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
-  const totalValue = leads.reduce((s, l) => s + (l.proposalValue || 0), 0);
-  const forecastRevenue = leads.reduce((s, l) => s + (l.expectedRevenue || 0), 0);
-  const wonLeads = leads.filter((l) => l.stage === "Closed Won");
-  const wonValue = wonLeads.reduce((s, l) => s + (l.proposalValue || 0), 0);
-  const activeLeads = leads.filter((l) => l.stage !== "Closed Won" && l.stage !== "Closed Lost");
+  const isElevated = currentUser.role === "admin" || currentUser.role === "management";
 
-  const handleStageChange = (lead: Lead, stage: PipelineStage) => {
-    updateLead({ ...lead, stage, updatedAt: new Date().toISOString().split("T")[0] });
+  // Show all pipelines for elevated, only my pipelines for user
+  const visiblePipelines = isElevated
+    ? pipelines
+    : pipelines.filter((p) => p.ownerId === currentUser.id);
+
+  const totalValue = visiblePipelines.reduce((s, p) => s + (p.proposalValue || 0), 0);
+  const forecastRevenue = visiblePipelines.reduce((s, p) => s + (p.expectedRevenue || 0), 0);
+  const wonPipelines = visiblePipelines.filter((p) => p.stage === "Closed Won");
+  const wonValue = wonPipelines.reduce((s, p) => s + (p.proposalValue || 0), 0);
+  const activePipelines = visiblePipelines.filter((p) => p.stage !== "Closed Won" && p.stage !== "Closed Lost");
+
+  const handleStageChange = (pipeline: UserPipeline, stage: PipelineStage) => {
+    upsertPipeline({ ...pipeline, stage, updatedAt: new Date().toISOString().split("T")[0] });
   };
 
   const stageStats = PIPELINE_STAGES.map((stage) => {
-    const stageLeads = leads.filter((l) => l.stage === stage);
+    const stagePipelines = visiblePipelines.filter((p) => p.stage === stage);
     return {
       stage,
-      count: stageLeads.length,
-      value: stageLeads.reduce((s, l) => s + (l.proposalValue || 0), 0),
+      count: stagePipelines.length,
+      value: stagePipelines.reduce((s, p) => s + (p.proposalValue || 0), 0),
     };
   });
 
@@ -42,7 +49,10 @@ const PipelinePage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Pipeline</h1>
-          <p className="text-sm text-muted-foreground">{activeLeads.length} active deals</p>
+          <p className="text-sm text-muted-foreground">
+            {activePipelines.length} active pipeline thread{activePipelines.length !== 1 ? "s" : ""}
+            {!isElevated && " (your view)"}
+          </p>
         </div>
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "kanban" | "table" | "chart")}>
           <TabsList className="h-9">
@@ -59,7 +69,7 @@ const PipelinePage: React.FC = () => {
           { label: "Total Pipeline", value: formatCurrency(totalValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50" },
           { label: "Revenue Forecast", value: formatCurrency(forecastRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
           { label: "Closed Won", value: formatCurrency(wonValue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "Active Deals", value: activeLeads.length, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Active Threads", value: activePipelines.length, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
         ].map((s) => (
           <Card key={s.label} className="shadow-card border-border">
             <CardContent className="p-4">
@@ -73,13 +83,13 @@ const PipelinePage: React.FC = () => {
         ))}
       </div>
 
-      {/* Kanban */}
+      {/* Kanban — grouped by stage, each card is a pipeline thread */}
       {viewMode === "kanban" && (
         <div className="overflow-x-auto pb-4">
           <div className="flex gap-4 min-w-max">
             {PIPELINE_STAGES.map((stage) => {
-              const stageLeads = leads.filter((l) => l.stage === stage);
-              const stageValue = stageLeads.reduce((s, l) => s + (l.proposalValue || 0), 0);
+              const stagePipelines = visiblePipelines.filter((p) => p.stage === stage);
+              const stageValue = stagePipelines.reduce((s, p) => s + (p.proposalValue || 0), 0);
               return (
                 <div key={stage} className="w-64 shrink-0">
                   <div className="flex items-center justify-between mb-2 px-1">
@@ -88,45 +98,47 @@ const PipelinePage: React.FC = () => {
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{stage}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Badge variant="secondary" className="text-xs h-4 px-1.5">{stageLeads.length}</Badge>
+                      <Badge variant="secondary" className="text-xs h-4 px-1.5">{stagePipelines.length}</Badge>
                       {stageValue > 0 && <span className="text-xs text-muted-foreground">{formatCurrency(stageValue)}</span>}
                     </div>
                   </div>
                   <div className="space-y-2 bg-muted/30 rounded-lg p-2 min-h-32">
-                    {stageLeads.map((lead) => {
-                      const company = companies.find((c) => c.id === lead.companyId);
-                      const owner = users.find((u) => u.id === lead.ownerId);
+                    {stagePipelines.map((pipeline) => {
+                      const lead = leads.find((l) => l.id === pipeline.leadId);
+                      const company = companies.find((c) => c.id === lead?.companyId);
+                      const owner = users.find((u) => u.id === pipeline.ownerId);
+                      const isMe = pipeline.ownerId === currentUser.id;
                       return (
                         <Card
-                          key={lead.id}
+                          key={pipeline.id}
                           className="shadow-card border-border cursor-pointer hover:shadow-card-md transition-shadow"
-                          onClick={() => setSelectedLeadId(lead.id)}
+                          onClick={() => setSelectedLeadId(pipeline.leadId)}
                         >
                           <CardContent className="p-3">
-                            <p className="font-semibold text-sm text-foreground mb-0.5">{lead.prospectName}</p>
+                            <p className="font-semibold text-sm text-foreground mb-0.5">{lead?.prospectName}</p>
                             <p className="text-xs text-muted-foreground mb-2">{company?.name}</p>
                             <div className="flex items-center justify-between">
-                              {lead.proposalValue ? (
-                                <span className="text-xs font-bold text-primary">{formatCurrency(lead.proposalValue)}</span>
+                              {pipeline.proposalValue ? (
+                                <span className="text-xs font-bold text-primary">{formatCurrency(pipeline.proposalValue)}</span>
                               ) : <span />}
                               <Avatar className="h-5 w-5">
-                                <AvatarFallback className="bg-secondary text-xs text-secondary-foreground">{owner?.avatar}</AvatarFallback>
+                                <AvatarFallback className={`text-xs ${isMe ? "bg-primary text-white" : "bg-secondary text-secondary-foreground"}`}>{owner?.avatar}</AvatarFallback>
                               </Avatar>
                             </div>
-                            {lead.probability !== undefined && lead.probability > 0 && (
+                            {pipeline.probability !== undefined && pipeline.probability > 0 && (
                               <div className="mt-2">
                                 <div className="h-1 bg-muted rounded-full overflow-hidden">
-                                  <div className="h-full bg-primary rounded-full" style={{ width: `${lead.probability}%` }} />
+                                  <div className="h-full bg-primary rounded-full" style={{ width: `${pipeline.probability}%` }} />
                                 </div>
-                                <span className="text-xs text-muted-foreground">{lead.probability}% probability</span>
+                                <span className="text-xs text-muted-foreground">{pipeline.probability}% probability</span>
                               </div>
                             )}
                           </CardContent>
                         </Card>
                       );
                     })}
-                    {stageLeads.length === 0 && (
-                      <div className="py-4 text-center text-xs text-muted-foreground/50">No leads</div>
+                    {stagePipelines.length === 0 && (
+                      <div className="py-4 text-center text-xs text-muted-foreground/50">No pipelines</div>
                     )}
                   </div>
                 </div>
@@ -145,6 +157,7 @@ const PipelinePage: React.FC = () => {
                 <tr className="bg-muted/50 border-b border-border">
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Lead</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Company</th>
+                  {isElevated && <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Owner</th>}
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Stage</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Value</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Expected</th>
@@ -152,15 +165,30 @@ const PipelinePage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {leads.map((lead) => {
-                  const company = companies.find((c) => c.id === lead.companyId);
+                {visiblePipelines.map((pipeline) => {
+                  const lead = leads.find((l) => l.id === pipeline.leadId);
+                  const company = companies.find((c) => c.id === lead?.companyId);
+                  const owner = users.find((u) => u.id === pipeline.ownerId);
                   return (
-                    <tr key={lead.id} className="hover:bg-muted/20 cursor-pointer" onClick={() => setSelectedLeadId(lead.id)}>
-                      <td className="px-4 py-3 font-medium">{lead.prospectName}</td>
+                    <tr key={pipeline.id} className="hover:bg-muted/20 cursor-pointer" onClick={() => setSelectedLeadId(pipeline.leadId)}>
+                      <td className="px-4 py-3 font-medium">{lead?.prospectName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{company?.name}</td>
+                      {isElevated && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Avatar className="h-5 w-5">
+                              <AvatarFallback className="bg-secondary text-xs">{owner?.avatar}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs text-muted-foreground">{owner?.name}</span>
+                          </div>
+                        </td>
+                      )}
                       <td className="px-4 py-3">
-                        <Select value={lead.stage} onValueChange={(v) => { handleStageChange(lead, v as PipelineStage); }} >
-                          <SelectTrigger className={`h-7 w-36 border text-xs font-medium px-2 ${STAGE_COLORS[lead.stage]}`} onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value={pipeline.stage}
+                          onValueChange={(v) => { handleStageChange(pipeline, v as PipelineStage); }}
+                        >
+                          <SelectTrigger className={`h-7 w-36 border text-xs font-medium px-2 ${STAGE_COLORS[pipeline.stage]}`} onClick={(e) => e.stopPropagation()}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent onClick={(e) => e.stopPropagation()}>
@@ -168,10 +196,10 @@ const PipelinePage: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(lead.proposalValue)}</td>
-                      <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(lead.expectedRevenue)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(pipeline.proposalValue)}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(pipeline.expectedRevenue)}</td>
                       <td className="px-4 py-3 text-right">
-                        {lead.probability !== undefined ? `${lead.probability}%` : "—"}
+                        {pipeline.probability !== undefined ? `${pipeline.probability}%` : "—"}
                       </td>
                     </tr>
                   );
@@ -196,7 +224,7 @@ const PipelinePage: React.FC = () => {
                   <XAxis dataKey="stage" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" />
                   <YAxis yAxisId="left" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number, name: string) => [name === "value" ? formatCurrency(v) : v, name === "value" ? "Pipeline Value" : "Lead Count"]} />
+                  <Tooltip formatter={(v: number, name: string) => [name === "value" ? formatCurrency(v) : v, name === "value" ? "Pipeline Value" : "Thread Count"]} />
                   <Bar yAxisId="left" dataKey="value" fill="hsl(18 100% 50%)" radius={[4, 4, 0, 0]} name="value" />
                   <Bar yAxisId="right" dataKey="count" fill="hsl(210 100% 56%)" radius={[4, 4, 0, 0]} name="count" />
                 </BarChart>
@@ -213,7 +241,7 @@ const PipelinePage: React.FC = () => {
                       <div className={`w-2.5 h-2.5 rounded-full ${STAGE_DOT[stage.stage]}`} />
                       <span className="text-sm font-semibold">{stage.stage}</span>
                     </div>
-                    <Badge variant="secondary">{stage.count} leads</Badge>
+                    <Badge variant="secondary">{stage.count} thread{stage.count !== 1 ? "s" : ""}</Badge>
                   </div>
                   <p className="text-2xl font-bold text-foreground mt-2">{formatCurrency(stage.value)}</p>
                   <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">

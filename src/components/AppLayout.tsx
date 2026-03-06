@@ -76,7 +76,7 @@ const AppLayout: React.FC = () => {
             <SidebarNavLink key={item.to} to={item.to} icon={item.icon} label={item.label} collapsed={collapsed} end={item.to === "/"} />
           ))}
 
-          {currentUser.role === "admin" && (
+          {(currentUser.role === "admin" || currentUser.role === "management") && (
             <>
               <div className={cn("my-3 border-t border-sidebar-border", collapsed && "mx-2")} />
               {adminNavItems.map((item) => (
@@ -99,7 +99,7 @@ const AppLayout: React.FC = () => {
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-sidebar-accent-foreground truncate">{currentUser.name}</p>
-                    <p className="text-xs text-sidebar-foreground truncate">{currentUser.role}</p>
+                    <p className="text-xs text-sidebar-foreground truncate capitalize">{currentUser.role}</p>
                   </div>
                 )}
               </button>
@@ -156,7 +156,16 @@ const AppLayout: React.FC = () => {
               </Avatar>
               <div className="hidden sm:block">
                 <p className="text-xs font-semibold leading-tight">{currentUser.name}</p>
-                <Badge variant={currentUser.role === "admin" ? "default" : "secondary"} className="text-xs h-4 px-1">
+                <Badge
+                  variant="outline"
+                  className={`text-xs h-4 px-1 capitalize ${
+                    currentUser.role === "admin"
+                      ? "border-destructive/30 text-destructive bg-destructive/10"
+                      : currentUser.role === "management"
+                      ? "border-blue-300 text-blue-700 bg-blue-50"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
                   {currentUser.role}
                 </Badge>
               </div>

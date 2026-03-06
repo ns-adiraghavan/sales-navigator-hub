@@ -1,32 +1,34 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Lead, PipelineStage } from "@/data/types";
+import { Lead, UserPipeline } from "@/data/types";
 import { PIPELINE_STAGES, STAGE_COLORS, formatCurrency, generateId } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Filter, Mail, Phone, Linkedin, Pencil, Trash2, Calendar, ChevronRight, MoreHorizontal } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Search, Mail, Phone, Linkedin, Pencil, Trash2, ChevronRight, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
 
 const LeadsPage: React.FC = () => {
-  const { leads, companies, users, currentUser, addLead, updateLead, deleteLead } = useApp();
+  const { leads, companies, users, currentUser, pipelines, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
   const [search, setSearch] = useState("");
-  const [stageFilter, setStageFilter] = useState<string>("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"all" | "mine">("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
-  const isAdmin = currentUser.role === "admin";
+  const isElevated = currentUser.role === "admin" || currentUser.role === "management";
+
+  // For "My Leads": show leads where currentUser has a pipeline thread
+  const myLeadIds = new Set(pipelines.filter((p) => p.ownerId === currentUser.id).map((p) => p.leadId));
 
   const filteredLeads = leads.filter((l) => {
     const company = companies.find((c) => c.id === l.companyId);
@@ -34,14 +36,18 @@ const LeadsPage: React.FC = () => {
       l.prospectName.toLowerCase().includes(search.toLowerCase()) ||
       company?.name.toLowerCase().includes(search.toLowerCase()) ||
       l.email.toLowerCase().includes(search.toLowerCase());
-    const matchStage = stageFilter === "all" || l.stage === stageFilter;
-    const matchOwner = ownerFilter === "all" || l.ownerId === ownerFilter;
-    const matchView = viewMode === "all" ? true : l.ownerId === currentUser.id;
-    return matchSearch && matchStage && matchOwner && matchView;
+    const matchOwner = ownerFilter === "all" || pipelines.some((p) => p.leadId === l.id && p.ownerId === ownerFilter);
+    const matchView = viewMode === "all" ? true : myLeadIds.has(l.id);
+    return matchSearch && matchOwner && matchView;
   });
 
   const handleDelete = (id: string) => {
     if (confirm("Delete this lead?")) deleteLead(id);
+  };
+
+  // Last activity: most recent meeting date for the lead, or updatedAt
+  const getLastActivity = (leadId: string) => {
+    return leads.find((l) => l.id === leadId)?.updatedAt || "—";
   };
 
   return (
@@ -60,26 +66,17 @@ const LeadsPage: React.FC = () => {
       <div className="flex flex-wrap gap-3">
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "all" | "mine")}>
           <TabsList className="h-9">
-            <TabsItem value="all" label="All Leads" />
-            <TabsItem value="mine" label="My Leads" />
+            <TabsTrigger value="all" className="text-sm px-4">All Leads</TabsTrigger>
+            <TabsTrigger value="mine" className="text-sm px-4">My Leads</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search leads..." className="pl-8 h-9 w-64" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <Select value={stageFilter} onValueChange={setStageFilter}>
-          <SelectTrigger className="h-9 w-44">
-            <SelectValue placeholder="All Stages" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Stages</SelectItem>
-            {PIPELINE_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        {isAdmin && (
+        {isElevated && (
           <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-            <SelectTrigger className="h-9 w-40">
+            <SelectTrigger className="h-9 w-44">
               <SelectValue placeholder="All Owners" />
             </SelectTrigger>
             <SelectContent>
@@ -98,17 +95,18 @@ const LeadsPage: React.FC = () => {
               <tr className="bg-muted/50 border-b border-border">
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Prospect</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Company</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Stage</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Value</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Owner</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Contact</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Email</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Lead Owner(s)</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Last Activity</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filteredLeads.map((lead) => {
                 const company = companies.find((c) => c.id === lead.companyId);
-                const owner = users.find((u) => u.id === lead.ownerId);
+                // All users who have a pipeline thread for this lead
+                const leadPipelines = pipelines.filter((p) => p.leadId === lead.id);
+                const owners = leadPipelines.map((p) => users.find((u) => u.id === p.ownerId)).filter(Boolean);
                 return (
                   <tr
                     key={lead.id}
@@ -122,44 +120,43 @@ const LeadsPage: React.FC = () => {
                             {lead.prospectName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium text-foreground">{lead.prospectName}</p>
-                          <p className="text-xs text-muted-foreground">{lead.email}</p>
-                        </div>
+                        <span className="font-medium text-foreground">{lead.prospectName}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{company?.name}</td>
                     <td className="px-4 py-3">
-                      <Select
-                        value={lead.stage}
-                        onValueChange={(val) => {
-                          updateLead({ ...lead, stage: val as PipelineStage, updatedAt: new Date().toISOString().split("T")[0] });
-                        }}
-                      >
-                        <SelectTrigger className={`h-7 w-36 border text-xs font-medium px-2 ${STAGE_COLORS[lead.stage]}`} onClick={(e) => e.stopPropagation()}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent onClick={(e) => e.stopPropagation()}>
-                          {PIPELINE_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-foreground">{formatCurrency(lead.proposalValue)}</td>
-                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Avatar className="h-5 w-5">
-                          <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">{owner?.avatar}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-muted-foreground text-xs">{owner?.name.split(" ")[0]}</span>
+                        <a href={`mailto:${lead.email}`} className="text-primary hover:underline text-xs" onClick={(e) => e.stopPropagation()}>
+                          {lead.email}
+                        </a>
+                        {lead.mobile && (
+                          <a href={`tel:${lead.mobile}`} className="text-muted-foreground hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                            <Phone size={12} />
+                          </a>
+                        )}
+                        {lead.linkedIn && (
+                          <a href={`https://${lead.linkedIn}`} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                            <Linkedin size={12} />
+                          </a>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <a href={`mailto:${lead.email}`} className="text-muted-foreground hover:text-primary transition-colors"><Mail size={14} /></a>
-                        {lead.mobile && <a href={`tel:${lead.mobile}`} className="text-muted-foreground hover:text-primary transition-colors"><Phone size={14} /></a>}
-                        {lead.linkedIn && <a href={`https://${lead.linkedIn}`} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin size={14} /></a>}
+                      <div className="flex items-center gap-1">
+                        {owners.slice(0, 3).map((owner) => owner && (
+                          <Avatar key={owner.id} className="h-5 w-5 -ml-1 first:ml-0 ring-1 ring-background">
+                            <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">{owner.avatar}</AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {owners.length > 3 && (
+                          <span className="text-xs text-muted-foreground ml-1">+{owners.length - 3}</span>
+                        )}
+                        {owners.length === 1 && (
+                          <span className="text-xs text-muted-foreground ml-1">{owners[0]?.name.split(" ")[0]}</span>
+                        )}
                       </div>
                     </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{getLastActivity(lead.id)}</td>
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -167,8 +164,12 @@ const LeadsPage: React.FC = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setSelectedLeadId(lead.id)} className="gap-2"><ChevronRight size={14} />View Details</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setEditLead(lead)} className="gap-2"><Pencil size={14} />Edit</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(lead.id)} className="gap-2 text-destructive"><Trash2 size={14} />Delete</DropdownMenuItem>
+                          {isElevated && (
+                            <DropdownMenuItem onClick={() => setEditLead(lead)} className="gap-2"><Pencil size={14} />Edit</DropdownMenuItem>
+                          )}
+                          {currentUser.role === "admin" && (
+                            <DropdownMenuItem onClick={() => handleDelete(lead.id)} className="gap-2 text-destructive"><Trash2 size={14} />Delete</DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -176,7 +177,7 @@ const LeadsPage: React.FC = () => {
                 );
               })}
               {filteredLeads.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">No leads found</td></tr>
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">No leads found</td></tr>
               )}
             </tbody>
           </table>
@@ -188,9 +189,9 @@ const LeadsPage: React.FC = () => {
         open={showCreateModal || !!editLead}
         lead={editLead}
         onClose={() => { setShowCreateModal(false); setEditLead(null); }}
-        onSave={(lead) => {
-          if (editLead) updateLead({ ...lead, updatedAt: new Date().toISOString().split("T")[0] });
-          else addLead(lead);
+        onSave={(lead, pipeline) => {
+          if (editLead) updateLead(lead);
+          else { addLead(lead); if (pipeline) upsertPipeline(pipeline); }
           setShowCreateModal(false);
           setEditLead(null);
         }}
@@ -204,31 +205,36 @@ const LeadsPage: React.FC = () => {
   );
 };
 
-// Tab item helper
-const TabsItem: React.FC<{ value: string; label: string }> = ({ value, label }) => (
-  <TabsTrigger value={value} className="text-sm px-4">{label}</TabsTrigger>
-);
-
 interface LeadFormModalProps {
   open: boolean;
   lead?: Lead | null;
   onClose: () => void;
-  onSave: (lead: Lead) => void;
+  onSave: (lead: Lead, pipeline?: UserPipeline) => void;
 }
 
 export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClose, onSave }) => {
-  const { companies, currentUser } = useApp();
-  const [form, setForm] = useState<Partial<Lead>>(
-    lead || { ownerId: currentUser.id, stage: "New Lead" }
-  );
+  const { companies, leads, currentUser } = useApp();
+  const [form, setForm] = useState<Partial<Lead>>(lead || {});
+  const [emailError, setEmailError] = useState("");
 
   React.useEffect(() => {
-    setForm(lead || { ownerId: currentUser.id, stage: "New Lead" });
+    setForm(lead || {});
+    setEmailError("");
   }, [lead, open]);
 
   const handleSubmit = () => {
     if (!form.prospectName || !form.companyId || !form.email) return;
-    onSave({
+
+    // Email uniqueness check (only for new leads)
+    if (!lead) {
+      const existing = leads.find((l) => l.email.toLowerCase() === form.email!.toLowerCase());
+      if (existing) {
+        setEmailError("A lead with this email already exists. Multiple users can engage the same lead from their own pipeline.");
+        return;
+      }
+    }
+
+    const newLead: Lead = {
       id: lead?.id || generateId(),
       prospectName: form.prospectName!,
       companyId: form.companyId!,
@@ -236,14 +242,21 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
       linkedIn: form.linkedIn,
       mobile: form.mobile,
       notes: form.notes,
-      ownerId: form.ownerId || currentUser.id,
-      stage: form.stage || "New Lead",
-      proposalValue: form.proposalValue,
-      expectedRevenue: form.expectedRevenue,
-      probability: form.probability,
       createdAt: lead?.createdAt || new Date().toISOString().split("T")[0],
       updatedAt: new Date().toISOString().split("T")[0],
-    });
+    };
+
+    // Create an initial pipeline thread for the current user (only on new lead)
+    const pipeline: UserPipeline | undefined = !lead ? {
+      id: generateId(),
+      leadId: newLead.id,
+      ownerId: currentUser.id,
+      stage: "New Lead",
+      createdAt: newLead.createdAt,
+      updatedAt: newLead.updatedAt,
+    } : undefined;
+
+    onSave(newLead, pipeline);
   };
 
   const set = (key: keyof Lead, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -272,7 +285,15 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
           </div>
           <div className="space-y-1.5">
             <Label>Email *</Label>
-            <Input type="email" value={form.email || ""} onChange={(e) => set("email", e.target.value)} placeholder="email@company.com" />
+            <Input
+              type="email"
+              value={form.email || ""}
+              onChange={(e) => { set("email", e.target.value); setEmailError(""); }}
+              placeholder="email@company.com"
+              disabled={!!lead}
+            />
+            {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+            {!lead && <p className="text-xs text-muted-foreground">Leads are unique by email address.</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -282,21 +303,6 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
             <div className="space-y-1.5">
               <Label>LinkedIn</Label>
               <Input value={form.linkedIn || ""} onChange={(e) => set("linkedIn", e.target.value)} placeholder="linkedin.com/in/..." />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Pipeline Stage</Label>
-              <Select value={form.stage || "New Lead"} onValueChange={(v) => set("stage", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PIPELINE_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Proposal Value ($)</Label>
-              <Input type="number" value={form.proposalValue || ""} onChange={(e) => set("proposalValue", Number(e.target.value))} placeholder="0" />
             </div>
           </div>
           <div className="space-y-1.5">
