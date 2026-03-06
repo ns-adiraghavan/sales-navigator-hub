@@ -19,9 +19,10 @@ import { Meeting } from "@/data/types";
 interface LeadDetailDrawerProps {
   leadId: string;
   onClose: () => void;
+  defaultTab?: "overview" | "meetings" | "pipeline";
 }
 
-const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose }) => {
+const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, defaultTab = "overview" }) => {
   const {
     leads, companies, users, meetings, currentUser,
     updateLead, addMeeting, updateMeeting,

@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
 
 const LeadsPage: React.FC = () => {
-  const { leads, companies, users, currentUser, pipelines, addLead, updateLead, deleteLead, upsertPipeline, meetings, updateMeeting } = useApp();
+  const { leads, companies, users, currentUser, pipelines, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
   const [search, setSearch] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
