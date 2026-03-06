@@ -51,14 +51,14 @@ export const USERS: User[] = [
 ];
 
 export const COMPANIES: Company[] = [
-  { id: "c1", name: "Coca-Cola", industry: "Food & Beverage", website: "coca-cola.com", location: "Atlanta, GA", size: "500K+", createdAt: "2024-01-20" },
-  { id: "c2", name: "Salesforce", industry: "Technology", website: "salesforce.com", location: "San Francisco, CA", size: "70K+", createdAt: "2024-01-22" },
-  { id: "c3", name: "Goldman Sachs", industry: "Finance", website: "goldmansachs.com", location: "New York, NY", size: "45K+", createdAt: "2024-01-25" },
-  { id: "c4", name: "Tesla", industry: "Automotive", website: "tesla.com", location: "Austin, TX", size: "127K+", createdAt: "2024-02-01" },
-  { id: "c5", name: "Deloitte", industry: "Consulting", website: "deloitte.com", location: "New York, NY", size: "415K+", createdAt: "2024-02-10" },
-  { id: "c6", name: "Pfizer", industry: "Pharmaceuticals", website: "pfizer.com", location: "New York, NY", size: "83K+", createdAt: "2024-02-15" },
-  { id: "c7", name: "Amazon Web Services", industry: "Technology", website: "aws.amazon.com", location: "Seattle, WA", size: "1.5M+", createdAt: "2024-02-20" },
-  { id: "c8", name: "Unilever", industry: "Consumer Goods", website: "unilever.com", location: "London, UK", size: "149K+", createdAt: "2024-03-01" },
+  { id: "c1", name: "Coca-Cola", industry: "Retail & Logistics", website: "coca-cola.com", location: "Atlanta, GA", size: "500K+", createdAt: "2024-01-20" },
+  { id: "c2", name: "Salesforce", industry: "ICT & Media", website: "salesforce.com", location: "San Francisco, CA", size: "70K+", createdAt: "2024-01-22" },
+  { id: "c3", name: "Goldman Sachs", industry: "Banking & Insurance", website: "goldmansachs.com", location: "New York, NY", size: "45K+", createdAt: "2024-01-25" },
+  { id: "c4", name: "Tesla", industry: "Automotive & Manufacturing", website: "tesla.com", location: "Austin, TX", size: "127K+", createdAt: "2024-02-01" },
+  { id: "c5", name: "Deloitte", industry: "ICT & Media", website: "deloitte.com", location: "New York, NY", size: "415K+", createdAt: "2024-02-10" },
+  { id: "c6", name: "Pfizer", industry: "Life Sciences & Healthcare", website: "pfizer.com", location: "New York, NY", size: "83K+", createdAt: "2024-02-15" },
+  { id: "c7", name: "Amazon Web Services", industry: "ICT & Media", website: "aws.amazon.com", location: "Seattle, WA", size: "1.5M+", createdAt: "2024-02-20" },
+  { id: "c8", name: "Unilever", industry: "Retail & Logistics", website: "unilever.com", location: "London, UK", size: "149K+", createdAt: "2024-03-01" },
 ];
 
 /**
@@ -82,35 +82,21 @@ export const LEADS: Lead[] = [
 
 /**
  * Per-user pipeline threads. Each user has their own pipeline per lead.
- * Demo: John Martinez (l1) has pipelines from both u1 and u2 to show multi-user engagement.
  */
 export const USER_PIPELINES: UserPipeline[] = [
-  // John Martinez — u1 pipeline
-  { id: "up1", leadId: "l1", ownerId: "u1", stage: "Proposal Sent", proposalValue: 250000, expectedRevenue: 225000, probability: 70, createdAt: "2024-03-01", updatedAt: "2024-03-10" },
-  // John Martinez — u2 also engaging same lead (different pipeline)
-  { id: "up2", leadId: "l1", ownerId: "u2", stage: "Discovery", proposalValue: 80000, expectedRevenue: 56000, probability: 40, createdAt: "2024-03-05", updatedAt: "2024-03-12" },
-  // Lisa Thompson — u2
-  { id: "up3", leadId: "l2", ownerId: "u2", stage: "Discovery", proposalValue: 80000, expectedRevenue: 64000, probability: 40, createdAt: "2024-03-05", updatedAt: "2024-03-12" },
-  // Robert Kim — u1
-  { id: "up4", leadId: "l3", ownerId: "u1", stage: "Negotiation", proposalValue: 420000, expectedRevenue: 378000, probability: 80, createdAt: "2024-02-20", updatedAt: "2024-03-15" },
-  // Amanda Foster — u2
-  { id: "up5", leadId: "l4", ownerId: "u2", stage: "Contacted", proposalValue: 130000, expectedRevenue: 91000, probability: 35, createdAt: "2024-03-08", updatedAt: "2024-03-08" },
-  // Michael Brown — u3
-  { id: "up6", leadId: "l5", ownerId: "u3", stage: "New Lead", proposalValue: 0, expectedRevenue: 0, probability: 10, createdAt: "2024-03-12", updatedAt: "2024-03-12" },
-  // Jennifer Walsh — u1
-  { id: "up7", leadId: "l6", ownerId: "u1", stage: "Closed Won", proposalValue: 890000, expectedRevenue: 890000, probability: 100, createdAt: "2024-01-15", updatedAt: "2024-03-01" },
-  // Chris Anderson — u3
-  { id: "up8", leadId: "l7", ownerId: "u3", stage: "Proposal Sent", proposalValue: 340000, expectedRevenue: 272000, probability: 65, createdAt: "2024-02-28", updatedAt: "2024-03-11" },
-  // Patricia Lee — u2
-  { id: "up9", leadId: "l8", ownerId: "u2", stage: "Discovery", proposalValue: 175000, expectedRevenue: 122500, probability: 45, createdAt: "2024-03-03", updatedAt: "2024-03-09" },
-  // Steven Park — u1
-  { id: "up10", leadId: "l9", ownerId: "u1", stage: "Negotiation", proposalValue: 220000, expectedRevenue: 198000, probability: 78, createdAt: "2024-02-25", updatedAt: "2024-03-14" },
-  // Rachel Torres — u5
-  { id: "up11", leadId: "l10", ownerId: "u5", stage: "Contacted", proposalValue: 560000, expectedRevenue: 280000, probability: 30, createdAt: "2024-03-10", updatedAt: "2024-03-10" },
-  // Daniel Wright — u3
-  { id: "up12", leadId: "l11", ownerId: "u3", stage: "New Lead", probability: 15, createdAt: "2024-03-14", updatedAt: "2024-03-14" },
-  // Emma Clark — u5
-  { id: "up13", leadId: "l12", ownerId: "u5", stage: "Closed Lost", proposalValue: 95000, expectedRevenue: 0, probability: 0, createdAt: "2024-02-01", updatedAt: "2024-03-05" },
+  { id: "up1", leadId: "l1", ownerId: "u1", stage: "Proposal Sent", createdAt: "2024-03-01", updatedAt: "2024-03-10" },
+  { id: "up2", leadId: "l1", ownerId: "u2", stage: "Discovery", createdAt: "2024-03-05", updatedAt: "2024-03-12" },
+  { id: "up3", leadId: "l2", ownerId: "u2", stage: "Discovery", createdAt: "2024-03-05", updatedAt: "2024-03-12" },
+  { id: "up4", leadId: "l3", ownerId: "u1", stage: "Negotiation", createdAt: "2024-02-20", updatedAt: "2024-03-15" },
+  { id: "up5", leadId: "l4", ownerId: "u2", stage: "Contacted", createdAt: "2024-03-08", updatedAt: "2024-03-08" },
+  { id: "up6", leadId: "l5", ownerId: "u3", stage: "New Lead", createdAt: "2024-03-12", updatedAt: "2024-03-12" },
+  { id: "up7", leadId: "l6", ownerId: "u1", stage: "Closed Won", createdAt: "2024-01-15", updatedAt: "2024-03-01" },
+  { id: "up8", leadId: "l7", ownerId: "u3", stage: "Proposal Sent", createdAt: "2024-02-28", updatedAt: "2024-03-11" },
+  { id: "up9", leadId: "l8", ownerId: "u2", stage: "Discovery", createdAt: "2024-03-03", updatedAt: "2024-03-09" },
+  { id: "up10", leadId: "l9", ownerId: "u1", stage: "Negotiation", createdAt: "2024-02-25", updatedAt: "2024-03-14" },
+  { id: "up11", leadId: "l10", ownerId: "u5", stage: "Contacted", createdAt: "2024-03-10", updatedAt: "2024-03-10" },
+  { id: "up12", leadId: "l11", ownerId: "u3", stage: "New Lead", createdAt: "2024-03-14", updatedAt: "2024-03-14" },
+  { id: "up13", leadId: "l12", ownerId: "u5", stage: "Closed Lost", createdAt: "2024-02-01", updatedAt: "2024-03-05" },
 ];
 
 // Get today and relative dates
@@ -135,10 +121,15 @@ export const MEETINGS: Meeting[] = [
   { id: "m10", title: "Quarterly Business Review", leadId: "l6", scheduledById: "u1", date: fmt(addDays(today, 7)), time: "09:00", duration: 120, notes: "QBR with closed won client.", outcome: "Ongoing relationship", minutes: "Reviewed ROI metrics. Client highly satisfied. Upsell opportunity identified.", attendees: ["Alex Johnson", "Jennifer Walsh"], createdAt: fmt(addDays(today, -30)) },
 ];
 
+/**
+ * Proposals are linked to a UserPipeline thread (pipelineId).
+ * Multiple proposals can exist per pipeline thread.
+ */
 export const PROPOSALS: Proposal[] = [
-  { id: "p1", leadId: "l1", ownerId: "u1", title: "Enterprise Sales Platform - Coca-Cola", value: 250000, stage: "Proposal Sent", probability: 70, expectedRevenue: 175000, sentDate: fmt(addDays(today, -10)), notes: "Full platform license with 5-year term.", createdAt: fmt(addDays(today, -15)), updatedAt: fmt(addDays(today, -10)) },
-  { id: "p2", leadId: "l3", ownerId: "u1", title: "Automation Suite - Coca-Cola Operations", value: 420000, stage: "Negotiation", probability: 80, expectedRevenue: 336000, sentDate: fmt(addDays(today, -20)), notes: "Custom implementation included.", createdAt: fmt(addDays(today, -25)), updatedAt: fmt(addDays(today, -3)) },
-  { id: "p3", leadId: "l6", ownerId: "u1", title: "Digital Transformation Platform - Goldman Sachs", value: 890000, stage: "Closed Won", probability: 100, expectedRevenue: 890000, sentDate: fmt(addDays(today, -60)), closedDate: fmt(addDays(today, -30)), notes: "Multi-year enterprise agreement.", createdAt: fmt(addDays(today, -65)), updatedAt: fmt(addDays(today, -30)) },
-  { id: "p4", leadId: "l7", ownerId: "u3", title: "Supply Chain Analytics - Tesla", value: 340000, stage: "Proposal Sent", probability: 65, expectedRevenue: 221000, sentDate: fmt(addDays(today, -8)), notes: "Includes custom dashboard development.", createdAt: fmt(addDays(today, -12)), updatedAt: fmt(addDays(today, -8)) },
-  { id: "p5", leadId: "l9", ownerId: "u1", title: "Consulting Platform - Deloitte", value: 220000, stage: "Negotiation", probability: 78, expectedRevenue: 171600, sentDate: fmt(addDays(today, -15)), notes: "Volume discount applied.", createdAt: fmt(addDays(today, -18)), updatedAt: fmt(addDays(today, -5)) },
+  { id: "p1", pipelineId: "up1", leadId: "l1", ownerId: "u1", title: "Enterprise Sales Platform - Phase 1", value: 250000, stage: "Proposal Sent", probability: 70, expectedRevenue: 175000, notes: "Full platform license with 5-year term.", createdAt: fmt(addDays(today, -15)), updatedAt: fmt(addDays(today, -10)) },
+  { id: "p1b", pipelineId: "up1", leadId: "l1", ownerId: "u1", title: "Enterprise Sales Platform - Phase 2 Add-on", value: 80000, stage: "Proposal Sent", probability: 55, expectedRevenue: 44000, notes: "Analytics module expansion.", createdAt: fmt(addDays(today, -8)), updatedAt: fmt(addDays(today, -5)) },
+  { id: "p2", pipelineId: "up4", leadId: "l3", ownerId: "u1", title: "Automation Suite - Coca-Cola Operations", value: 420000, stage: "Negotiation", probability: 80, expectedRevenue: 336000, notes: "Custom implementation included.", createdAt: fmt(addDays(today, -25)), updatedAt: fmt(addDays(today, -3)) },
+  { id: "p3", pipelineId: "up7", leadId: "l6", ownerId: "u1", title: "Digital Transformation Platform - Goldman Sachs", value: 890000, stage: "Closed Won", probability: 100, expectedRevenue: 890000, notes: "Multi-year enterprise agreement.", createdAt: fmt(addDays(today, -65)), updatedAt: fmt(addDays(today, -30)) },
+  { id: "p4", pipelineId: "up8", leadId: "l7", ownerId: "u3", title: "Supply Chain Analytics - Tesla", value: 340000, stage: "Proposal Sent", probability: 65, expectedRevenue: 221000, notes: "Includes custom dashboard development.", createdAt: fmt(addDays(today, -12)), updatedAt: fmt(addDays(today, -8)) },
+  { id: "p5", pipelineId: "up10", leadId: "l9", ownerId: "u1", title: "Consulting Platform - Deloitte", value: 220000, stage: "Negotiation", probability: 78, expectedRevenue: 171600, notes: "Volume discount applied.", createdAt: fmt(addDays(today, -18)), updatedAt: fmt(addDays(today, -5)) },
 ];

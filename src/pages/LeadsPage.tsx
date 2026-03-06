@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Lead, UserPipeline } from "@/data/types";
-import { PIPELINE_STAGES, STAGE_COLORS, formatCurrency, generateId } from "@/lib/constants";
+import { PIPELINE_STAGES, STAGE_COLORS, generateId } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,14 +20,13 @@ const LeadsPage: React.FC = () => {
   const { leads, companies, users, currentUser, pipelines, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
   const [search, setSearch] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"all" | "mine">("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
 
-  // For "My Leads": show leads where currentUser has a pipeline thread
+  // Leads where the current user has a pipeline thread
   const myLeadIds = new Set(pipelines.filter((p) => p.ownerId === currentUser.id).map((p) => p.leadId));
 
   const filteredLeads = leads.filter((l) => {
@@ -37,15 +36,15 @@ const LeadsPage: React.FC = () => {
       company?.name.toLowerCase().includes(search.toLowerCase()) ||
       l.email.toLowerCase().includes(search.toLowerCase());
     const matchOwner = ownerFilter === "all" || pipelines.some((p) => p.leadId === l.id && p.ownerId === ownerFilter);
-    const matchView = viewMode === "all" ? true : myLeadIds.has(l.id);
-    return matchSearch && matchOwner && matchView;
+    // Regular users only see their own leads
+    const matchRole = isElevated ? true : myLeadIds.has(l.id);
+    return matchSearch && matchOwner && matchRole;
   });
 
   const handleDelete = (id: string) => {
     if (confirm("Delete this lead?")) deleteLead(id);
   };
 
-  // Last activity: most recent meeting date for the lead, or updatedAt
   const getLastActivity = (leadId: string) => {
     return leads.find((l) => l.id === leadId)?.updatedAt || "—";
   };
@@ -64,12 +63,15 @@ const LeadsPage: React.FC = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "all" | "mine")}>
-          <TabsList className="h-9">
-            <TabsTrigger value="all" className="text-sm px-4">All Leads</TabsTrigger>
-            <TabsTrigger value="mine" className="text-sm px-4">My Leads</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Only elevated roles see the All Leads / My Leads tabs */}
+        {isElevated && (
+          <Tabs defaultValue="all" onValueChange={(v) => setOwnerFilter(v === "mine" ? currentUser.id : "all")}>
+            <TabsList className="h-9">
+              <TabsTrigger value="all" className="text-sm px-4">All Leads</TabsTrigger>
+              <TabsTrigger value="mine" className="text-sm px-4">My Leads</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search leads..." className="pl-8 h-9 w-64" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -104,7 +106,6 @@ const LeadsPage: React.FC = () => {
             <tbody className="divide-y divide-border">
               {filteredLeads.map((lead) => {
                 const company = companies.find((c) => c.id === lead.companyId);
-                // All users who have a pipeline thread for this lead
                 const leadPipelines = pipelines.filter((p) => p.leadId === lead.id);
                 const owners = leadPipelines.map((p) => users.find((u) => u.id === p.ownerId)).filter(Boolean);
                 return (

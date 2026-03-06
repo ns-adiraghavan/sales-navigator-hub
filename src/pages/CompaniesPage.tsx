@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Company } from "@/data/types";
+import { Company, Industry, INDUSTRY_OPTIONS } from "@/data/types";
 import { formatCurrency, generateId } from "@/lib/constants";
 import { STAGE_COLORS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Building2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
 
 const CompaniesPage: React.FC = () => {
-  const { companies, leads, pipelines, addCompany } = useApp();
+  const { companies, leads, pipelines, proposals, addCompany } = useApp();
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
@@ -45,10 +46,10 @@ const CompaniesPage: React.FC = () => {
       <div className="space-y-3">
         {filtered.map((company) => {
           const compLeads = leads.filter((l) => l.companyId === company.id);
-          const compPipelineIds = compLeads.map((l) => l.id);
-          const totalValue = pipelines
-            .filter((p) => compPipelineIds.includes(p.leadId))
-            .reduce((s, p) => s + (p.proposalValue || 0), 0);
+          const compPipelineIds = new Set(
+            pipelines.filter((p) => compLeads.some((l) => l.id === p.leadId)).map((p) => p.id)
+          );
+          const totalValue = proposals.filter((p) => compPipelineIds.has(p.pipelineId)).reduce((s, p) => s + p.value, 0);
           const isExpanded = expandedCompany === company.id;
 
           return (
@@ -178,7 +179,7 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onSave
     onSave({
       id: generateId(),
       name: form.name!,
-      industry: form.industry!,
+      industry: form.industry as Industry,
       website: form.website,
       location: form.location,
       size: form.size,
@@ -200,7 +201,14 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onSave
           </div>
           <div className="space-y-1.5">
             <Label>Industry *</Label>
-            <Input value={form.industry || ""} onChange={(e) => set("industry", e.target.value)} placeholder="e.g. Technology" />
+            <Select value={form.industry || ""} onValueChange={(v) => set("industry", v)}>
+              <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
+              <SelectContent>
+                {INDUSTRY_OPTIONS.map((ind) => (
+                  <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">

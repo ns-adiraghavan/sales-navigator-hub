@@ -1,8 +1,7 @@
 import React from "react";
 import { useApp } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, Building2, Calendar, TrendingUp, DollarSign, Target, ArrowUp, ArrowDown } from "lucide-react";
+import { Users, Building2, Calendar, TrendingUp, DollarSign, Target, ArrowUp } from "lucide-react";
 import { formatCurrency } from "@/lib/constants";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
@@ -12,7 +11,7 @@ const CHART_COLORS = ["#ff5c35", "#3b82f6", "#22c55e", "#8b5cf6", "#f59e0b", "#e
 const STAGE_ORDER = ["New Lead", "Contacted", "Discovery", "Proposal Sent", "Negotiation", "Closed Won", "Closed Lost"] as const;
 
 const DashboardPage: React.FC = () => {
-  const { leads, meetings, companies, pipelines } = useApp();
+  const { leads, meetings, companies, pipelines, proposals } = useApp();
 
   const today = new Date().toISOString().split("T")[0];
   const weekEnd = new Date();
@@ -22,33 +21,32 @@ const DashboardPage: React.FC = () => {
   const totalLeads = leads.length;
   const meetingsThisWeek = meetings.filter((m) => m.date >= today && m.date <= weekEndStr).length;
 
-  // Aggregate from pipelines (all pipeline threads)
-  const totalPipelineValue = pipelines.reduce((sum, p) => sum + (p.proposalValue || 0), 0);
-  const forecastedRevenue = pipelines.reduce((sum, p) => sum + (p.expectedRevenue || 0), 0);
+  // Aggregate from proposals (proposals link to pipeline threads)
+  const totalPipelineValue = proposals.reduce((sum, p) => sum + p.value, 0);
+  const forecastedRevenue = proposals.reduce((sum, p) => sum + p.expectedRevenue, 0);
   const closedWonPipelines = pipelines.filter((p) => p.stage === "Closed Won");
-  const closedRevenue = closedWonPipelines.reduce((sum, p) => sum + (p.proposalValue || 0), 0);
+  const closedWonPipelineIds = new Set(closedWonPipelines.map((p) => p.id));
+  const closedRevenue = proposals.filter((p) => closedWonPipelineIds.has(p.pipelineId)).reduce((sum, p) => sum + p.value, 0);
 
-  // Pipelines by stage
+  // Pipelines by stage — aggregate proposal values per stage
   const stageData = STAGE_ORDER.map((stage) => {
     const stagePipelines = pipelines.filter((p) => p.stage === stage);
+    const stagePipelineIds = new Set(stagePipelines.map((p) => p.id));
     return {
       stage: stage.split(" ")[0],
       fullStage: stage,
       count: stagePipelines.length,
-      value: stagePipelines.reduce((s, p) => s + (p.proposalValue || 0), 0),
+      value: proposals.filter((p) => stagePipelineIds.has(p.pipelineId)).reduce((s, p) => s + p.value, 0),
     };
   });
 
-  // Pipeline by company (via leads → pipelines)
+  // Pipeline by company
   const companyPipeline = companies
     .map((c) => {
       const compLeadIds = leads.filter((l) => l.companyId === c.id).map((l) => l.id);
-      const compPipelines = pipelines.filter((p) => compLeadIds.includes(p.leadId));
-      return {
-        name: c.name.split(" ")[0],
-        value: compPipelines.reduce((s, p) => s + (p.proposalValue || 0), 0),
-        leads: compLeadIds.length,
-      };
+      const compPipelineIds = new Set(pipelines.filter((p) => compLeadIds.includes(p.leadId)).map((p) => p.id));
+      const value = proposals.filter((p) => compPipelineIds.has(p.pipelineId)).reduce((s, p) => s + p.value, 0);
+      return { name: c.name.split(" ")[0], value, leads: compLeadIds.length };
     })
     .filter((c) => c.value > 0)
     .sort((a, b) => b.value - a.value)
@@ -59,12 +57,12 @@ const DashboardPage: React.FC = () => {
   const upcomingMeetings = meetings.filter((m) => m.date >= today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
 
   const statCards = [
-    { title: "Total Leads", value: totalLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50", change: "+12%", up: true },
-    { title: "Pipeline Value", value: formatCurrency(totalPipelineValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50", change: "+8%", up: true },
-    { title: "Revenue Forecast", value: formatCurrency(forecastedRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50", change: "+5%", up: true },
-    { title: "Meetings (7d)", value: meetingsThisWeek, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", change: meetingsThisWeek > 0 ? `${meetingsThisWeek} upcoming` : "None", up: true },
-    { title: "Companies", value: companies.length, icon: Building2, color: "text-teal-600", bg: "bg-teal-50", change: "+2 this month", up: true },
-    { title: "Closed Won", value: formatCurrency(closedRevenue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50", change: `${closedWonPipelines.length} deals`, up: true },
+    { title: "Total Leads", value: totalLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50", change: "+12%" },
+    { title: "Pipeline Value", value: formatCurrency(totalPipelineValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50", change: "+8%" },
+    { title: "Revenue Forecast", value: formatCurrency(forecastedRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50", change: "+5%" },
+    { title: "Meetings (7d)", value: meetingsThisWeek, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", change: `${meetingsThisWeek} upcoming` },
+    { title: "Companies", value: companies.length, icon: Building2, color: "text-teal-600", bg: "bg-teal-50", change: "+2 this month" },
+    { title: "Closed Won", value: formatCurrency(closedRevenue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50", change: `${closedWonPipelines.length} deals` },
   ];
 
   return (
@@ -87,7 +85,7 @@ const DashboardPage: React.FC = () => {
               <p className="text-xl font-bold text-foreground leading-none mb-1">{card.value}</p>
               <p className="text-xs text-muted-foreground mb-2">{card.title}</p>
               <div className="flex items-center gap-1">
-                {card.up ? <ArrowUp size={10} className="text-green-500" /> : <ArrowDown size={10} className="text-red-500" />}
+                <ArrowUp size={10} className="text-green-500" />
                 <span className="text-xs text-muted-foreground">{card.change}</span>
               </div>
             </CardContent>
