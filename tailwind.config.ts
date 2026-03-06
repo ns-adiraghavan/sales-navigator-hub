@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          light: "hsl(var(--primary-light))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -57,6 +58,18 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        status: {
+          new: "hsl(var(--status-new))",
+          contacted: "hsl(var(--status-contacted))",
+          discovery: "hsl(var(--status-discovery))",
+          proposal: "hsl(var(--status-proposal))",
+          negotiation: "hsl(var(--status-negotiation))",
+          won: "hsl(var(--status-won))",
+          lost: "hsl(var(--status-lost))",
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
