@@ -6,7 +6,6 @@ import { useNudges } from "@/hooks/useNudges";
 import PendingActions from "@/components/PendingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,9 +13,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Mail, Phone, Linkedin, Pencil, Trash2, ChevronRight, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Phone, Linkedin, Pencil, Trash2, ChevronRight, MoreHorizontal, Mail, Calendar, Activity, TrendingUp, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const LeadsPage: React.FC = () => {
   const { leads, companies, users, currentUser, pipelines, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
