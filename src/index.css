@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* HubSpot-inspired palette */
+    /* Navy blue palette */
     --background: 210 20% 98%;
     --foreground: 220 20% 12%;
 
@@ -16,10 +16,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 12%;
 
-    /* Primary: HubSpot Orange */
-    --primary: 18 100% 50%;
+    /* Primary: Navy Blue */
+    --primary: 221 68% 28%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 18 100% 95%;
+    --primary-light: 221 68% 95%;
 
     /* Secondary: cool blue-gray */
     --secondary: 215 25% 94%;
@@ -36,31 +36,31 @@
 
     --border: 215 20% 88%;
     --input: 215 20% 88%;
-    --ring: 18 100% 50%;
+    --ring: 221 68% 28%;
 
     --radius: 0.5rem;
 
     /* Sidebar */
-    --sidebar-background: 220 25% 10%;
+    --sidebar-background: 221 50% 12%;
     --sidebar-foreground: 215 20% 75%;
-    --sidebar-primary: 18 100% 50%;
+    --sidebar-primary: 221 68% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 17%;
+    --sidebar-accent: 221 40% 18%;
     --sidebar-accent-foreground: 215 20% 90%;
-    --sidebar-border: 220 20% 16%;
-    --sidebar-ring: 18 100% 50%;
+    --sidebar-border: 221 35% 20%;
+    --sidebar-ring: 221 68% 55%;
 
     /* Status colors */
     --status-new: 210 100% 56%;
     --status-contacted: 262 80% 60%;
     --status-discovery: 38 92% 50%;
-    --status-proposal: 18 100% 50%;
+    --status-proposal: 221 68% 45%;
     --status-negotiation: 280 65% 55%;
     --status-won: 142 71% 45%;
     --status-lost: 0 72% 51%;
 
     /* Chart colors */
-    --chart-1: 18 100% 50%;
+    --chart-1: 221 68% 35%;
     --chart-2: 210 100% 56%;
     --chart-3: 142 71% 45%;
     --chart-4: 262 80% 60%;
