@@ -119,16 +119,6 @@ const LeadsPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Pending Actions */}
-      <div className="px-6 shrink-0">
-        <PendingActions
-          nudges={nudges}
-          onScheduleMeeting={handleNudgeSchedule}
-          onUpdatePipeline={handleNudgePipeline}
-          onAddNotes={handleNudgeNotes}
-        />
-      </div>
-
       {/* Filters */}
       <div className="px-6 pb-3 flex flex-wrap gap-3 shrink-0">
         {isElevated && (
