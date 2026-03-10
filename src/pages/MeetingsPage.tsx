@@ -247,12 +247,34 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, past, onEdit, onDele
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground">{meeting.title}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-foreground">{meeting.title}</p>
+                {meeting.meetingType && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-xs gap-1 py-0",
+                      meeting.meetingType === "online"
+                        ? "border-blue-500/40 text-blue-600 bg-blue-50 dark:bg-blue-950/30"
+                        : "border-green-500/40 text-green-700 bg-green-50 dark:bg-green-950/30"
+                    )}
+                  >
+                    {meeting.meetingType === "online" ? <Video size={10} /> : <MapPin size={10} />}
+                    {meeting.meetingType === "online" ? "Online" : "In-Person"}
+                  </Badge>
+                )}
+              </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                 <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock size={11} />{meeting.time}{meeting.duration ? ` · ${meeting.duration}min` : ""}</span>
                 {lead && <span className="text-xs text-muted-foreground">{lead.prospectName} · {company?.name}</span>}
                 {scheduler && <span className="text-xs text-muted-foreground">by {scheduler.name}</span>}
               </div>
+              {meeting.location && (
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  {meeting.meetingType === "online" ? <Video size={10} /> : <MapPin size={10} />}
+                  {meeting.location}
+                </p>
+              )}
               {meeting.outcome && <Badge variant="outline" className="mt-2 text-xs">{meeting.outcome}</Badge>}
               {meeting.minutes && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{meeting.minutes}</p>}
             </div>
