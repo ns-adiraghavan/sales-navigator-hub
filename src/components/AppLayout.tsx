@@ -122,7 +122,7 @@ const AppLayout: React.FC = () => {
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-sidebar-accent-foreground truncate">{currentUser.name}</p>
-                    <p className="text-xs text-sidebar-foreground truncate capitalize">{currentUser.role}</p>
+                    <p className="text-xs text-sidebar-foreground truncate">{{ bd: "Business Dev", sales: "Sales Team", management: "Management", admin: "Admin" }[currentUser.role]}</p>
                   </div>
                 )}
               </button>
