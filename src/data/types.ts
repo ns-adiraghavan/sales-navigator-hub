@@ -114,6 +114,8 @@ export interface Proposal {
   updatedAt: string;
 }
 
+export type MeetingType = "in-person" | "online";
+
 export interface Meeting {
   id: string;
   title: string;
@@ -122,6 +124,8 @@ export interface Meeting {
   date: string; // ISO string
   time: string;
   duration?: number; // minutes
+  meetingType?: MeetingType;
+  location?: string; // address for in-person or link for online
   notes?: string;
   outcome?: string;
   minutes?: string;
