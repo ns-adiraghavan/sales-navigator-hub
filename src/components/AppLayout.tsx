@@ -20,6 +20,7 @@ import {
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/actions", label: "Pending Actions", icon: Zap },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/companies", label: "Companies", icon: Building2 },
   { to: "/meetings", label: "Meetings", icon: Calendar },

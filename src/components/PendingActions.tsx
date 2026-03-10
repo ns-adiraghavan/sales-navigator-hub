@@ -51,8 +51,9 @@ const PendingActions: React.FC<PendingActionsProps> = ({
   onScheduleMeeting,
   onUpdatePipeline,
   onAddNotes,
+  defaultExpanded = false,
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   const visible = nudges.filter((n) => !dismissed.has(n.id));
