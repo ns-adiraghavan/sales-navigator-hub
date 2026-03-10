@@ -273,19 +273,21 @@ const LeadsPage: React.FC = () => {
                     <div>
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Quick Actions</p>
                       <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
-                          onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
-                          <Calendar size={13} />Schedule Meeting
-                        </Button>
-                        <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
-                          onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
-                          <Activity size={13} />Add Meeting Notes
-                        </Button>
-                        <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
-                          onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("pipeline"); }}>
-                          <TrendingUp size={13} />View Pipeline
-                        </Button>
-                      </div>
+                         <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
+                           onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
+                           <Calendar size={13} />Schedule Meeting
+                         </Button>
+                         <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
+                           onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
+                           <Activity size={13} />Add Meeting Notes
+                         </Button>
+                         {canPipeline && (
+                           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
+                             onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("pipeline"); }}>
+                             <TrendingUp size={13} />View Pipeline
+                           </Button>
+                         )}
+                       </div>
                     </div>
 
                     <div className="h-px bg-border" />
