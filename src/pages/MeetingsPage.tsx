@@ -254,8 +254,8 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, past, onEdit, onDele
                     className={cn(
                       "text-xs gap-1 py-0",
                       meeting.meetingType === "online"
-                        ? "border-blue-500/40 text-blue-600 bg-blue-50 dark:bg-blue-950/30"
-                        : "border-green-500/40 text-green-700 bg-green-50 dark:bg-green-950/30"
+                        ? "border-primary/40 text-primary bg-primary/5"
+                        : "border-muted-foreground/40 text-muted-foreground bg-muted/40"
                     )}
                   >
                     {meeting.meetingType === "online" ? <Video size={10} /> : <MapPin size={10} />}
