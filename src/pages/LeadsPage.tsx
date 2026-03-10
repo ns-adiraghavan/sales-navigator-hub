@@ -2,74 +2,9 @@ import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Lead, UserPipeline } from "@/data/types";
 import { generateId } from "@/lib/constants";
-import { useNudges } from "@/hooks/useNudges";
-import PendingActions from "@/components/PendingActions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Phone, Linkedin, Pencil, Trash2, ChevronRight, MoreHorizontal, Mail, Calendar, Activity, TrendingUp, User } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import LeadDetailDrawer from "@/components/LeadDetailDrawer";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+...
 
-const LeadsPage: React.FC = () => {
-  const { leads, companies, users, currentUser, pipelines, meetings, proposals, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
-  const [search, setSearch] = useState("");
-  const [ownerFilter, setOwnerFilter] = useState<string>("all");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editLead, setEditLead] = useState<Lead | null>(null);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [openDrawerLeadId, setOpenDrawerLeadId] = useState<string | null>(null);
-  const [drawerTab, setDrawerTab] = useState<"overview" | "pipeline" | "meetings">("overview");
-  const nudges = useNudges();
-
-  const isElevated = currentUser.role === "admin" || currentUser.role === "management";
-
-  const myLeadIds = new Set(pipelines.filter((p) => p.ownerId === currentUser.id).map((p) => p.leadId));
-
-  const filteredLeads = leads.filter((l) => {
-    const company = companies.find((c) => c.id === l.companyId);
-    const matchSearch =
-      l.prospectName.toLowerCase().includes(search.toLowerCase()) ||
-      company?.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.email.toLowerCase().includes(search.toLowerCase());
-    const matchOwner = ownerFilter === "all" || pipelines.some((p) => p.leadId === l.id && p.ownerId === ownerFilter);
-    const matchRole = isElevated ? true : myLeadIds.has(l.id);
-    return matchSearch && matchOwner && matchRole;
-  });
-
-  const selectedLead = selectedLeadId ? leads.find((l) => l.id === selectedLeadId) : null;
-
-  const handleDelete = (id: string) => {
-    if (confirm("Delete this lead?")) {
-      deleteLead(id);
-      if (selectedLeadId === id) setSelectedLeadId(null);
-    }
-  };
-
-  const getLastActivity = (leadId: string) => {
-    return leads.find((l) => l.id === leadId)?.updatedAt || "—";
-  };
-
-  // Nudge quick actions — open drawer instead of inline panel
-  const handleNudgeSchedule = (leadId: string) => {
-    setOpenDrawerLeadId(leadId);
-    setDrawerTab("meetings");
-  };
-  const handleNudgePipeline = (leadId: string) => {
-    setOpenDrawerLeadId(leadId);
-    setDrawerTab("pipeline");
-  };
-  const handleNudgeNotes = (_meetingId?: string, leadId?: string) => {
-    if (leadId) { setOpenDrawerLeadId(leadId); setDrawerTab("meetings"); }
-  };
 
   // Preview panel data helpers
   const getPreviewData = (lead: Lead) => {

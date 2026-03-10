@@ -10,6 +10,7 @@ interface PendingActionsProps {
   onScheduleMeeting: (leadId: string) => void;
   onUpdatePipeline: (leadId: string) => void;
   onAddNotes: (meetingId?: string, leadId?: string) => void;
+  defaultExpanded?: boolean;
 }
 
 const NUDGE_CONFIG: Record<NudgeType, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; actions: string[] }> = {
