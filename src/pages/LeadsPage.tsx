@@ -189,9 +189,9 @@ const LeadsPage: React.FC = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => { setOpenDrawerLeadId(lead.id); setDrawerTab("overview"); }} className="gap-2 text-xs"><ChevronRight size={12} />Full Details</DropdownMenuItem>
-                            {isElevated && (
-                              <DropdownMenuItem onClick={() => setEditLead(lead)} className="gap-2 text-xs"><Pencil size={12} />Edit</DropdownMenuItem>
-                            )}
+                            {canEdit && (
+                               <DropdownMenuItem onClick={() => setEditLead(lead)} className="gap-2 text-xs"><Pencil size={12} />Edit</DropdownMenuItem>
+                             )}
                             {currentUser.role === "admin" && (
                               <DropdownMenuItem onClick={() => handleDelete(lead.id)} className="gap-2 text-xs text-destructive"><Trash2 size={12} />Delete</DropdownMenuItem>
                             )}
