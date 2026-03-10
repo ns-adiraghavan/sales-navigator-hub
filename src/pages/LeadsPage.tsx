@@ -28,7 +28,10 @@ const LeadsPage: React.FC = () => {
   const [drawerTab, setDrawerTab] = useState<"overview" | "pipeline" | "meetings">("overview");
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
-  const myLeadIds = new Set(pipelines.filter((p) => p.ownerId === currentUser.id).map((p) => p.leadId));
+  const canPipeline = currentUser.role !== "bd";
+  // For BD: only edit own entries; for sales/admin: can edit
+  const canEdit = currentUser.role === "admin" || currentUser.role === "sales" || currentUser.role === "management";
+  const visibleLeadIds = getVisibleLeadIds(currentUser.id);
 
   const filteredLeads = leads.filter((l) => {
     const company = companies.find((c) => c.id === l.companyId);
@@ -37,7 +40,7 @@ const LeadsPage: React.FC = () => {
       company?.name.toLowerCase().includes(search.toLowerCase()) ||
       l.email.toLowerCase().includes(search.toLowerCase());
     const matchOwner = ownerFilter === "all" || pipelines.some((p) => p.leadId === l.id && p.ownerId === ownerFilter);
-    const matchRole = isElevated ? true : myLeadIds.has(l.id);
+    const matchRole = isElevated ? true : visibleLeadIds.has(l.id);
     return matchSearch && matchOwner && matchRole;
   });
 
