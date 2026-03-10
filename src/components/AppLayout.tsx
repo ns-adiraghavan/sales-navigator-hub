@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell,
+  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell, Zap,
 } from "lucide-react";
 import { SidebarNavLink } from "@/components/SidebarNavLink";
 import { useApp } from "@/context/AppContext";
