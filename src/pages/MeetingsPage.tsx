@@ -299,11 +299,11 @@ interface MeetingFormModalProps {
 export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meeting, defaultDate, onClose, onSave }) => {
   const { leads, companies, currentUser } = useApp();
   const [form, setForm] = useState<Partial<Meeting>>(
-    meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60 }
+    meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60, meetingType: "online" }
   );
 
   React.useEffect(() => {
-    setForm(meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60 });
+    setForm(meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60, meetingType: "online" });
   }, [meeting, open, defaultDate]);
 
   const set = (key: keyof Meeting, value: unknown) => setForm((p) => ({ ...p, [key]: value }));
