@@ -20,6 +20,17 @@ const PipelinePage: React.FC = () => {
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
 
+  // BD users cannot access pipeline at all
+  if (currentUser.role === "bd") {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-6">
+        <TrendingUp size={48} className="text-muted-foreground" />
+        <h2 className="text-xl font-bold">Pipeline Not Available</h2>
+        <p className="text-muted-foreground max-w-xs">Business Developers don't have pipeline access. Your Sales Team lead manages the pipeline for the leads you enter.</p>
+      </div>
+    );
+  }
+
   const visiblePipelines = isElevated
     ? pipelines
     : pipelines.filter((p) => p.ownerId === currentUser.id);

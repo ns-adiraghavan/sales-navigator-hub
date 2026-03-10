@@ -190,11 +190,14 @@ const AppLayout: React.FC = () => {
                 <Badge
                   variant="outline"
                   className={`text-xs h-4 px-1 capitalize ${
-                    currentUser.role === "admin"
-                      ? "border-destructive/30 text-destructive bg-destructive/10"
-                      : currentUser.role === "management"
-                      ? "border-blue-300 text-blue-700 bg-blue-50"
-                      : "border-border text-muted-foreground"
+                  {currentUser.role === "admin"
+                    ? "border-destructive/30 text-destructive bg-destructive/10"
+                    : currentUser.role === "management"
+                    ? "border-blue-300 text-blue-700 bg-blue-50"
+                    : currentUser.role === "sales"
+                    ? "border-emerald-300 text-emerald-700 bg-emerald-50"
+                    : "border-amber-300 text-amber-700 bg-amber-50"
+                  }
                   }`}
                 >
                   {currentUser.role}
