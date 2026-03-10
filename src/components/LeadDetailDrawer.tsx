@@ -95,7 +95,9 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
               <TabsTrigger value="meetings" className="flex-1 rounded-none text-xs">
                 Meetings ({leadMeetings.length})
               </TabsTrigger>
-              <TabsTrigger value="pipeline" className="flex-1 rounded-none text-xs">Pipeline</TabsTrigger>
+              {!isBD && (
+                <TabsTrigger value="pipeline" className="flex-1 rounded-none text-xs">Pipeline</TabsTrigger>
+              )}
             </TabsList>
 
             {/* ── Overview Tab ── */}
