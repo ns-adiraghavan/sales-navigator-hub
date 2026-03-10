@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const LeadsPage: React.FC = () => {
-  const { leads, companies, users, currentUser, pipelines, meetings, proposals, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
+  const { leads, companies, users, currentUser, pipelines, meetings, proposals, addLead, updateLead, deleteLead, upsertPipeline, getVisibleLeadIds } = useApp();
   const [search, setSearch] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -28,7 +28,10 @@ const LeadsPage: React.FC = () => {
   const [drawerTab, setDrawerTab] = useState<"overview" | "pipeline" | "meetings">("overview");
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
-  const myLeadIds = new Set(pipelines.filter((p) => p.ownerId === currentUser.id).map((p) => p.leadId));
+  const canPipeline = currentUser.role !== "bd";
+  // For BD: only edit own entries; for sales/admin: can edit
+  const canEdit = currentUser.role === "admin" || currentUser.role === "sales" || currentUser.role === "management";
+  const visibleLeadIds = getVisibleLeadIds(currentUser.id);
 
   const filteredLeads = leads.filter((l) => {
     const company = companies.find((c) => c.id === l.companyId);
@@ -37,7 +40,7 @@ const LeadsPage: React.FC = () => {
       company?.name.toLowerCase().includes(search.toLowerCase()) ||
       l.email.toLowerCase().includes(search.toLowerCase());
     const matchOwner = ownerFilter === "all" || pipelines.some((p) => p.leadId === l.id && p.ownerId === ownerFilter);
-    const matchRole = isElevated ? true : myLeadIds.has(l.id);
+    const matchRole = isElevated ? true : visibleLeadIds.has(l.id);
     return matchSearch && matchOwner && matchRole;
   });
 
@@ -186,9 +189,9 @@ const LeadsPage: React.FC = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => { setOpenDrawerLeadId(lead.id); setDrawerTab("overview"); }} className="gap-2 text-xs"><ChevronRight size={12} />Full Details</DropdownMenuItem>
-                            {isElevated && (
-                              <DropdownMenuItem onClick={() => setEditLead(lead)} className="gap-2 text-xs"><Pencil size={12} />Edit</DropdownMenuItem>
-                            )}
+                            {canEdit && (
+                               <DropdownMenuItem onClick={() => setEditLead(lead)} className="gap-2 text-xs"><Pencil size={12} />Edit</DropdownMenuItem>
+                             )}
                             {currentUser.role === "admin" && (
                               <DropdownMenuItem onClick={() => handleDelete(lead.id)} className="gap-2 text-xs text-destructive"><Trash2 size={12} />Delete</DropdownMenuItem>
                             )}
@@ -270,19 +273,21 @@ const LeadsPage: React.FC = () => {
                     <div>
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Quick Actions</p>
                       <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
-                          onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
-                          <Calendar size={13} />Schedule Meeting
-                        </Button>
-                        <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
-                          onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
-                          <Activity size={13} />Add Meeting Notes
-                        </Button>
-                        <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
-                          onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("pipeline"); }}>
-                          <TrendingUp size={13} />View Pipeline
-                        </Button>
-                      </div>
+                         <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
+                           onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
+                           <Calendar size={13} />Schedule Meeting
+                         </Button>
+                         <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
+                           onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("meetings"); }}>
+                           <Activity size={13} />Add Meeting Notes
+                         </Button>
+                         {canPipeline && (
+                           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8"
+                             onClick={() => { setOpenDrawerLeadId(selectedLead.id); setDrawerTab("pipeline"); }}>
+                             <TrendingUp size={13} />View Pipeline
+                           </Button>
+                         )}
+                       </div>
                     </div>
 
                     <div className="h-px bg-border" />

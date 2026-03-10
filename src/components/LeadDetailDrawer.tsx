@@ -44,6 +44,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
+  const isBD = currentUser.role === "bd";
   const myPipeline = getMyPipeline(leadId);
   const allPipelines = isElevated ? getPipelinesForLead(leadId) : [];
   const myProposals = myPipeline ? getProposalsForPipeline(myPipeline.id) : [];
@@ -94,7 +95,9 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
               <TabsTrigger value="meetings" className="flex-1 rounded-none text-xs">
                 Meetings ({leadMeetings.length})
               </TabsTrigger>
-              <TabsTrigger value="pipeline" className="flex-1 rounded-none text-xs">Pipeline</TabsTrigger>
+              {!isBD && (
+                <TabsTrigger value="pipeline" className="flex-1 rounded-none text-xs">Pipeline</TabsTrigger>
+              )}
             </TabsList>
 
             {/* ── Overview Tab ── */}

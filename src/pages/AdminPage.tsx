@@ -11,17 +11,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, Shield, Users, Building2, Lock } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, Users, Building2, Lock, GitBranch, ArrowRight, X } from "lucide-react";
 import { STAGE_COLORS } from "@/lib/constants";
 
 const ROLE_BADGE: Record<UserRole, { label: string; className: string }> = {
-  admin: { label: "Admin", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  admin:      { label: "Admin",      className: "bg-destructive/10 text-destructive border-destructive/20" },
   management: { label: "Management", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  user: { label: "User", className: "bg-secondary text-secondary-foreground border-border" },
+  sales:      { label: "Sales Team", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  bd:         { label: "Business Dev", className: "bg-amber-50 text-amber-700 border-amber-200" },
+};
+
+const ROLE_PERMISSIONS: Record<UserRole, string> = {
+  bd:         "Enter leads & meetings on behalf of their Sales Team. No pipeline access.",
+  sales:      "Own leads + BD-entered leads. Own pipeline threads only.",
+  management: "View all leads, all meetings, all pipelines across the team.",
+  admin:      "Full access + edit any record + manage users + configure team hierarchy.",
 };
 
 const AdminPage: React.FC = () => {
-  const { currentUser, users, leads, companies, pipelines, addUser, updateUser, deleteUser } = useApp();
+  const { currentUser, users, leads, companies, pipelines, teamLinks, addUser, updateUser, deleteUser, upsertTeamLink, removeTeamLink } = useApp();
   const [showUserModal, setShowUserModal] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
 
@@ -35,24 +43,25 @@ const AdminPage: React.FC = () => {
     );
   }
 
+  const bdUsers   = users.filter((u) => u.role === "bd");
+  const salesUsers = users.filter((u) => u.role === "sales");
+  const mgmtUsers  = users.filter((u) => u.role === "management");
   const adminUsers = users.filter((u) => u.role === "admin");
-  const managementUsers = users.filter((u) => u.role === "management");
-  const regularUsers = users.filter((u) => u.role === "user");
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold">Admin Panel</h1>
-        <p className="text-sm text-muted-foreground">Manage users, roles, and platform settings</p>
+        <p className="text-sm text-muted-foreground">Manage users, roles, team hierarchy, and platform settings</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Users", value: users.length, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Admins", value: adminUsers.length, icon: Shield, color: "text-orange-600", bg: "bg-orange-50" },
-          { label: "Companies", value: companies.length, icon: Building2, color: "text-teal-600", bg: "bg-teal-50" },
-          { label: "Total Leads", value: leads.length, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: "Total Users",    value: users.length,       icon: Users,     color: "text-blue-600",    bg: "bg-blue-50" },
+          { label: "Admins",         value: adminUsers.length,  icon: Shield,    color: "text-destructive", bg: "bg-destructive/10" },
+          { label: "Companies",      value: companies.length,   icon: Building2, color: "text-teal-600",    bg: "bg-teal-50" },
+          { label: "Total Leads",    value: leads.length,       icon: Users,     color: "text-purple-600",  bg: "bg-purple-50" },
         ].map((s) => (
           <Card key={s.label} className="shadow-card border-border">
             <CardContent className="p-4">
@@ -68,12 +77,13 @@ const AdminPage: React.FC = () => {
 
       <Tabs defaultValue="users">
         <TabsList className="h-9">
-          <TabsTrigger value="users" className="px-4 text-sm">User Management</TabsTrigger>
+          <TabsTrigger value="users"     className="px-4 text-sm">User Management</TabsTrigger>
+          <TabsTrigger value="hierarchy" className="px-4 text-sm">Team Hierarchy</TabsTrigger>
           <TabsTrigger value="companies" className="px-4 text-sm">Company Records</TabsTrigger>
-          <TabsTrigger value="leads" className="px-4 text-sm">All Leads</TabsTrigger>
+          <TabsTrigger value="leads"     className="px-4 text-sm">All Leads</TabsTrigger>
         </TabsList>
 
-        {/* Users tab */}
+        {/* ─── Users tab ─── */}
         <TabsContent value="users" className="mt-4">
           <Card className="shadow-card border-border">
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
@@ -99,6 +109,7 @@ const AdminPage: React.FC = () => {
                     {users.map((user) => {
                       const userPipelines = pipelines.filter((p) => p.ownerId === user.id);
                       const rb = ROLE_BADGE[user.role];
+                      const reportsToUser = user.reportsTo ? users.find((u) => u.id === user.reportsTo) : null;
                       return (
                         <tr key={user.id} className="hover:bg-muted/20 transition-colors">
                           <td className="px-4 py-3">
@@ -109,17 +120,16 @@ const AdminPage: React.FC = () => {
                               <div>
                                 <p className="font-medium text-foreground">{user.name}</p>
                                 {user.id === currentUser.id && <span className="text-xs text-muted-foreground">(You)</span>}
+                                {reportsToUser && <p className="text-xs text-muted-foreground">→ {reportsToUser.name}</p>}
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground text-xs">{user.email}</td>
                           <td className="px-4 py-3">
-                            <Badge variant="outline" className={`text-xs border ${rb.className}`}>
-                              {rb.label}
-                            </Badge>
+                            <Badge variant="outline" className={`text-xs border ${rb.className}`}>{rb.label}</Badge>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{user.department || "—"}</td>
-                          <td className="px-4 py-3 font-medium">{userPipelines.length}</td>
+                          <td className="px-4 py-3 font-medium">{user.role === "bd" ? "—" : userPipelines.length}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditUser(user); setShowUserModal(true); }}>
@@ -140,16 +150,147 @@ const AdminPage: React.FC = () => {
               </div>
 
               {/* Role legend */}
-              <div className="px-4 py-3 border-t border-border bg-muted/20 flex flex-wrap gap-4 text-xs text-muted-foreground">
-                <span><strong className="text-foreground">User:</strong> Manage own leads & pipeline</span>
-                <span><strong className="text-foreground">Management:</strong> View all leads, all pipelines, all meetings</span>
-                <span><strong className="text-foreground">Admin:</strong> Everything + edit any record, manage users</span>
+              <div className="px-4 py-3 border-t border-border bg-muted/20 space-y-1 text-xs text-muted-foreground">
+                {(Object.entries(ROLE_PERMISSIONS) as [UserRole, string][]).map(([role, desc]) => (
+                  <p key={role}>
+                    <Badge variant="outline" className={`text-xs border mr-2 ${ROLE_BADGE[role].className}`}>{ROLE_BADGE[role].label}</Badge>
+                    {desc}
+                  </p>
+                ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Companies tab */}
+        {/* ─── Team Hierarchy tab ─── */}
+        <TabsContent value="hierarchy" className="mt-4 space-y-4">
+          <Card className="shadow-card border-border">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <GitBranch size={16} className="text-primary" />Team Hierarchy
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Assign which Business Developers report to which Sales Team members.
+                    BD users can enter leads & meetings on behalf of their Sales Team lead.
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Management layer */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Management Team</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {mgmtUsers.map((mgmt) => (
+                    <div key={mgmt.id} className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-bold">{mgmt.avatar}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{mgmt.name}</p>
+                        <Badge variant="outline" className={`text-xs border ${ROLE_BADGE.management.className}`}>Management</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sales + BD links */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sales Team → Business Developers</p>
+                <div className="space-y-4">
+                  {salesUsers.map((sales) => {
+                    const linkedBDs = teamLinks.filter((l) => l.salesId === sales.id);
+                    const unlinkedBDs = bdUsers.filter((bd) =>
+                      !teamLinks.find((l) => l.bdId === bd.id)
+                    );
+                    return (
+                      <div key={sales.id} className="border border-border rounded-lg overflow-hidden">
+                        {/* Sales header */}
+                        <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border-b border-border">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs font-bold">{sales.avatar}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-foreground">{sales.name}</p>
+                            <Badge variant="outline" className={`text-xs border ${ROLE_BADGE.sales.className}`}>Sales Team</Badge>
+                          </div>
+                        </div>
+
+                        {/* BD users under this sales */}
+                        <div className="p-3 space-y-2">
+                          {linkedBDs.length === 0 && (
+                            <p className="text-xs text-muted-foreground px-1">No BDs assigned yet.</p>
+                          )}
+                          {linkedBDs.map((link) => {
+                            const bd = users.find((u) => u.id === link.bdId);
+                            if (!bd) return null;
+                            return (
+                              <div key={bd.id} className="flex items-center gap-3 px-3 py-2 bg-amber-50 rounded-md border border-amber-100">
+                                <ArrowRight size={14} className="text-amber-400 shrink-0" />
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback className="bg-amber-100 text-amber-700 text-xs">{bd.avatar}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm text-foreground flex-1">{bd.name}</span>
+                                <Badge variant="outline" className={`text-xs border ${ROLE_BADGE.bd.className}`}>BD</Badge>
+                                <Button
+                                  variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                  onClick={() => removeTeamLink(bd.id)}
+                                  title="Remove link"
+                                >
+                                  <X size={12} />
+                                </Button>
+                              </div>
+                            );
+                          })}
+
+                          {/* Add BD dropdown */}
+                          {unlinkedBDs.length > 0 && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <Select onValueChange={(bdId) => upsertTeamLink({ bdId, salesId: sales.id })}>
+                                <SelectTrigger className="h-7 text-xs flex-1 border-dashed">
+                                  <SelectValue placeholder="+ Assign a BD…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {unlinkedBDs.map((bd) => (
+                                    <SelectItem key={bd.id} value={bd.id}>{bd.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Unassigned BDs */}
+              {bdUsers.filter((bd) => !teamLinks.find((l) => l.bdId === bd.id)).length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">⚠ Unassigned BDs</p>
+                  <div className="flex flex-wrap gap-2">
+                    {bdUsers
+                      .filter((bd) => !teamLinks.find((l) => l.bdId === bd.id))
+                      .map((bd) => (
+                        <div key={bd.id} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-sm">
+                          <Avatar className="h-5 w-5">
+                            <AvatarFallback className="bg-amber-100 text-amber-700 text-xs">{bd.avatar}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-amber-800">{bd.name}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── Companies tab ─── */}
         <TabsContent value="companies" className="mt-4">
           <Card className="shadow-card border-border overflow-hidden">
             <CardHeader className="pb-3">
@@ -194,7 +335,7 @@ const AdminPage: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* All leads tab — admin sees all pipelines too */}
+        {/* ─── All Leads tab ─── */}
         <TabsContent value="leads" className="mt-4">
           <Card className="shadow-card border-border overflow-hidden">
             <CardHeader className="pb-3">
@@ -251,6 +392,7 @@ const AdminPage: React.FC = () => {
       <UserFormModal
         open={showUserModal}
         user={editUser}
+        users={users}
         onClose={() => { setShowUserModal(false); setEditUser(null); }}
         onSave={(user) => {
           if (editUser) updateUser(user);
@@ -266,15 +408,16 @@ const AdminPage: React.FC = () => {
 interface UserFormModalProps {
   open: boolean;
   user?: User | null;
+  users: User[];
   onClose: () => void;
   onSave: (user: User) => void;
 }
 
-const UserFormModal: React.FC<UserFormModalProps> = ({ open, user, onClose, onSave }) => {
-  const [form, setForm] = useState<Partial<User>>(user || { role: "user" });
+const UserFormModal: React.FC<UserFormModalProps> = ({ open, user, users, onClose, onSave }) => {
+  const [form, setForm] = useState<Partial<User>>(user || { role: "sales" });
 
   React.useEffect(() => {
-    setForm(user || { role: "user" });
+    setForm(user || { role: "sales" });
   }, [user, open]);
 
   const set = (key: keyof User, value: string) => setForm((p) => ({ ...p, [key]: value }));
@@ -285,12 +428,15 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ open, user, onClose, onSa
       id: user?.id || generateId(),
       name: form.name!,
       email: form.email!,
-      role: (form.role as UserRole) || "user",
+      role: (form.role as UserRole) || "sales",
       avatar: form.name!.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
       department: form.department,
+      reportsTo: form.role === "bd" ? form.reportsTo : undefined,
       createdAt: user?.createdAt || new Date().toISOString().split("T")[0],
     });
   };
+
+  const salesUsers = users.filter((u) => u.role === "sales");
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -310,10 +456,11 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ open, user, onClose, onSa
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Role</Label>
-              <Select value={form.role || "user"} onValueChange={(v) => set("role", v)}>
+              <Select value={form.role || "sales"} onValueChange={(v) => set("role", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="bd">Business Dev</SelectItem>
+                  <SelectItem value="sales">Sales Team</SelectItem>
                   <SelectItem value="management">Management</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
@@ -324,6 +471,17 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ open, user, onClose, onSa
               <Input value={form.department || ""} onChange={(e) => set("department", e.target.value)} placeholder="Sales" />
             </div>
           </div>
+          {form.role === "bd" && (
+            <div className="space-y-1.5">
+              <Label>Reports To (Sales Team)</Label>
+              <Select value={form.reportsTo || ""} onValueChange={(v) => set("reportsTo", v)}>
+                <SelectTrigger><SelectValue placeholder="Select Sales Team member" /></SelectTrigger>
+                <SelectContent>
+                  {salesUsers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>

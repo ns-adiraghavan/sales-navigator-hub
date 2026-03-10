@@ -122,7 +122,7 @@ const AppLayout: React.FC = () => {
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-sidebar-accent-foreground truncate">{currentUser.name}</p>
-                    <p className="text-xs text-sidebar-foreground truncate capitalize">{currentUser.role}</p>
+                    <p className="text-xs text-sidebar-foreground truncate">{{ bd: "Business Dev", sales: "Sales Team", management: "Management", admin: "Admin" }[currentUser.role]}</p>
                   </div>
                 )}
               </button>
@@ -185,19 +185,21 @@ const AppLayout: React.FC = () => {
                   {currentUser.avatar}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden sm:block">
-                <p className="text-xs font-semibold leading-tight">{currentUser.name}</p>
-                <Badge
-                  variant="outline"
-                  className={`text-xs h-4 px-1 capitalize ${
-                    currentUser.role === "admin"
-                      ? "border-destructive/30 text-destructive bg-destructive/10"
-                      : currentUser.role === "management"
-                      ? "border-blue-300 text-blue-700 bg-blue-50"
-                      : "border-border text-muted-foreground"
-                  }`}
-                >
-                  {currentUser.role}
+               <div className="hidden sm:block">
+                 <p className="text-xs font-semibold leading-tight">{currentUser.name}</p>
+                 <Badge
+                   variant="outline"
+                   className={`text-xs h-4 px-1 capitalize ${
+                     currentUser.role === "admin"
+                       ? "border-destructive/30 text-destructive bg-destructive/10"
+                       : currentUser.role === "management"
+                       ? "border-blue-300 text-blue-700 bg-blue-50"
+                       : currentUser.role === "sales"
+                       ? "border-emerald-300 text-emerald-700 bg-emerald-50"
+                       : "border-amber-300 text-amber-700 bg-amber-50"
+                   }`}
+                 >
+                  {{ bd: "Business Dev", sales: "Sales Team", management: "Management", admin: "Admin" }[currentUser.role]}
                 </Badge>
               </div>
             </div>

@@ -1,4 +1,11 @@
-export type UserRole = "admin" | "management" | "user";
+/**
+ * Roles:
+ *  bd         – Business Developer: can enter leads & meetings on behalf of their ST. No pipeline access.
+ *  sales      – Sales Team: full pipeline access for their own leads + leads entered by their BDs.
+ *  management – Full read visibility of all leads, meetings, and pipelines across the team.
+ *  admin      – All management access + edit any record + manage users + configure team hierarchy.
+ */
+export type UserRole = "bd" | "sales" | "management" | "admin";
 
 export interface User {
   id: string;
@@ -7,7 +14,18 @@ export interface User {
   role: UserRole;
   avatar?: string;
   department?: string;
+  /** For BD users: the Sales Team member they report to (userId) */
+  reportsTo?: string;
   createdAt: string;
+}
+
+/**
+ * Links a BD user to the Sales Team member they report to.
+ * Managed by Admin via the Team Hierarchy panel.
+ */
+export interface TeamLink {
+  bdId: string;
+  salesId: string;
 }
 
 export type PipelineStage =
