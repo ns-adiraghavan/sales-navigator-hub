@@ -1,4 +1,4 @@
-import { User, Company, Lead, Meeting, Proposal, UserPipeline } from "./types";
+import { User, Company, Lead, Meeting, Proposal, UserPipeline, TeamLink } from "./types";
 
 export const CURRENT_USER: User = {
   id: "u1",
@@ -16,7 +16,7 @@ export const USERS: User[] = [
     id: "u2",
     name: "Sarah Mitchell",
     email: "sarah.mitchell@salesops.com",
-    role: "user",
+    role: "sales",
     avatar: "SM",
     department: "Sales",
     createdAt: "2024-02-01",
@@ -25,7 +25,7 @@ export const USERS: User[] = [
     id: "u3",
     name: "David Chen",
     email: "david.chen@salesops.com",
-    role: "user",
+    role: "sales",
     avatar: "DC",
     department: "Sales",
     createdAt: "2024-02-15",
@@ -43,11 +43,40 @@ export const USERS: User[] = [
     id: "u5",
     name: "James Wilson",
     email: "james.wilson@salesops.com",
-    role: "user",
+    role: "sales",
     avatar: "JW",
     department: "Sales",
     createdAt: "2024-03-01",
   },
+  {
+    id: "u6",
+    name: "Priya Patel",
+    email: "priya.patel@salesops.com",
+    role: "bd",
+    avatar: "PP",
+    department: "Business Development",
+    reportsTo: "u2", // reports to Sarah Mitchell (sales)
+    createdAt: "2024-04-01",
+  },
+  {
+    id: "u7",
+    name: "Tom Nguyen",
+    email: "tom.nguyen@salesops.com",
+    role: "bd",
+    avatar: "TN",
+    department: "Business Development",
+    reportsTo: "u3", // reports to David Chen (sales)
+    createdAt: "2024-04-05",
+  },
+];
+
+/**
+ * Team hierarchy: BD → Sales relationships.
+ * Derived from User.reportsTo, but also stored here for Admin editing.
+ */
+export const TEAM_LINKS: TeamLink[] = [
+  { bdId: "u6", salesId: "u2" },
+  { bdId: "u7", salesId: "u3" },
 ];
 
 export const COMPANIES: Company[] = [
