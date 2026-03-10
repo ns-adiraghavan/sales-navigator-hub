@@ -199,7 +199,7 @@ const AppLayout: React.FC = () => {
                        : "border-amber-300 text-amber-700 bg-amber-50"
                    }`}
                  >
-                  {currentUser.role}
+                  {{ bd: "Business Dev", sales: "Sales Team", management: "Management", admin: "Admin" }[currentUser.role]}
                 </Badge>
               </div>
             </div>
