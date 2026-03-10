@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ChevronLeft, ChevronRight, Clock, Users, MapPin, FileText, Pencil, Trash2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Clock, MapPin, Video, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -246,12 +246,34 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, past, onEdit, onDele
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground">{meeting.title}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-foreground">{meeting.title}</p>
+                {meeting.meetingType && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-xs gap-1 py-0",
+                      meeting.meetingType === "online"
+                        ? "border-primary/40 text-primary bg-primary/5"
+                        : "border-muted-foreground/40 text-muted-foreground bg-muted/40"
+                    )}
+                  >
+                    {meeting.meetingType === "online" ? <Video size={10} /> : <MapPin size={10} />}
+                    {meeting.meetingType === "online" ? "Online" : "In-Person"}
+                  </Badge>
+                )}
+              </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                 <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock size={11} />{meeting.time}{meeting.duration ? ` · ${meeting.duration}min` : ""}</span>
                 {lead && <span className="text-xs text-muted-foreground">{lead.prospectName} · {company?.name}</span>}
                 {scheduler && <span className="text-xs text-muted-foreground">by {scheduler.name}</span>}
               </div>
+              {meeting.location && (
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  {meeting.meetingType === "online" ? <Video size={10} /> : <MapPin size={10} />}
+                  {meeting.location}
+                </p>
+              )}
               {meeting.outcome && <Badge variant="outline" className="mt-2 text-xs">{meeting.outcome}</Badge>}
               {meeting.minutes && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{meeting.minutes}</p>}
             </div>
@@ -277,11 +299,11 @@ interface MeetingFormModalProps {
 export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meeting, defaultDate, onClose, onSave }) => {
   const { leads, companies, currentUser } = useApp();
   const [form, setForm] = useState<Partial<Meeting>>(
-    meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60 }
+    meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60, meetingType: "online" }
   );
 
   React.useEffect(() => {
-    setForm(meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60 });
+    setForm(meeting || { date: defaultDate || new Date().toISOString().split("T")[0], time: "10:00", duration: 60, meetingType: "online" });
   }, [meeting, open, defaultDate]);
 
   const set = (key: keyof Meeting, value: unknown) => setForm((p) => ({ ...p, [key]: value }));
@@ -296,6 +318,8 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meetin
       date: form.date!,
       time: form.time!,
       duration: form.duration,
+      meetingType: form.meetingType,
+      location: form.location,
       notes: form.notes,
       outcome: form.outcome,
       minutes: form.minutes,
@@ -315,6 +339,48 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meetin
             <Label>Meeting Title *</Label>
             <Input value={form.title || ""} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Discovery Call" />
           </div>
+
+          {/* Meeting type toggle */}
+          <div className="space-y-1.5">
+            <Label>Meeting Type</Label>
+            <div className="flex rounded-md border border-input overflow-hidden">
+              <button
+                type="button"
+                onClick={() => set("meetingType", "online")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-2 text-sm transition-colors",
+                  form.meetingType === "online"
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "bg-background text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Video size={14} /> Online
+              </button>
+              <button
+                type="button"
+                onClick={() => set("meetingType", "in-person")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-2 text-sm transition-colors border-l border-input",
+                  form.meetingType === "in-person"
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "bg-background text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <MapPin size={14} /> In-Person
+              </button>
+            </div>
+          </div>
+
+          {/* Location / link field */}
+          <div className="space-y-1.5">
+            <Label>{form.meetingType === "in-person" ? "Location / Address" : "Meeting Link"}</Label>
+            <Input
+              value={form.location || ""}
+              onChange={(e) => set("location", e.target.value)}
+              placeholder={form.meetingType === "in-person" ? "e.g. 123 Main St, London" : "e.g. https://meet.google.com/..."}
+            />
+          </div>
+
           <div className="space-y-1.5">
             <Label>Associated Lead *</Label>
             <Select value={form.leadId || ""} onValueChange={(v) => set("leadId", v)}>
