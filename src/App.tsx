@@ -12,6 +12,7 @@ import MeetingsPage from "@/pages/MeetingsPage";
 import PipelinePage from "@/pages/PipelinePage";
 import ChatPage from "@/pages/ChatPage";
 import AdminPage from "@/pages/AdminPage";
+import PendingActionsPage from "@/pages/PendingActionsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
