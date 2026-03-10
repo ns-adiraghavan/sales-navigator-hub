@@ -205,7 +205,7 @@ const AppLayout: React.FC = () => {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-hidden flex flex-col min-h-0">
+        <main className="flex-1 overflow-y-auto flex flex-col min-h-0">
           <Outlet />
         </main>
       </div>
