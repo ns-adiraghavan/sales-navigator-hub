@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const LeadsPage: React.FC = () => {
-  const { leads, companies, users, currentUser, pipelines, meetings, proposals, addLead, updateLead, deleteLead, upsertPipeline } = useApp();
+  const { leads, companies, users, currentUser, pipelines, meetings, proposals, addLead, updateLead, deleteLead, upsertPipeline, getVisibleLeadIds } = useApp();
   const [search, setSearch] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
