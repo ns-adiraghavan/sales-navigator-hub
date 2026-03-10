@@ -10,6 +10,7 @@ interface PendingActionsProps {
   onScheduleMeeting: (leadId: string) => void;
   onUpdatePipeline: (leadId: string) => void;
   onAddNotes: (meetingId?: string, leadId?: string) => void;
+  defaultExpanded?: boolean;
 }
 
 const NUDGE_CONFIG: Record<NudgeType, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; actions: string[] }> = {
@@ -50,8 +51,9 @@ const PendingActions: React.FC<PendingActionsProps> = ({
   onScheduleMeeting,
   onUpdatePipeline,
   onAddNotes,
+  defaultExpanded = false,
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   const visible = nudges.filter((n) => !dismissed.has(n.id));

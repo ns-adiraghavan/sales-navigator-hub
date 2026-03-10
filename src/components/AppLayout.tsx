@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell,
+  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell, Zap,
 } from "lucide-react";
 import { SidebarNavLink } from "@/components/SidebarNavLink";
 import { useApp } from "@/context/AppContext";
@@ -20,6 +20,7 @@ import {
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/actions", label: "Pending Actions", icon: Zap },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/companies", label: "Companies", icon: Building2 },
   { to: "/meetings", label: "Meetings", icon: Calendar },
@@ -84,8 +85,8 @@ const AppLayout: React.FC = () => {
                 collapsed={collapsed}
                 end={item.to === "/"}
               />
-              {/* Nudge badge on Leads nav item */}
-              {item.to === "/leads" && nudgeCount > 0 && (
+              {/* Nudge badge on Pending Actions nav item */}
+              {item.to === "/actions" && nudgeCount > 0 && (
                 <span
                   className={cn(
                     "absolute top-1.5 flex items-center justify-center rounded-full bg-destructive text-white text-xs font-bold leading-none",

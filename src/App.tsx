@@ -12,6 +12,7 @@ import MeetingsPage from "@/pages/MeetingsPage";
 import PipelinePage from "@/pages/PipelinePage";
 import ChatPage from "@/pages/ChatPage";
 import AdminPage from "@/pages/AdminPage";
+import PendingActionsPage from "@/pages/PendingActionsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/actions" element={<PendingActionsPage />} />
               <Route path="/leads" element={<LeadsPage />} />
               <Route path="/companies" element={<CompaniesPage />} />
               <Route path="/meetings" element={<MeetingsPage />} />

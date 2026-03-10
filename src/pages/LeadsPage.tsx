@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { Lead, UserPipeline } from "@/data/types";
 import { generateId } from "@/lib/constants";
-import { useNudges } from "@/hooks/useNudges";
-import PendingActions from "@/components/PendingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -28,10 +26,8 @@ const LeadsPage: React.FC = () => {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [openDrawerLeadId, setOpenDrawerLeadId] = useState<string | null>(null);
   const [drawerTab, setDrawerTab] = useState<"overview" | "pipeline" | "meetings">("overview");
-  const nudges = useNudges();
 
   const isElevated = currentUser.role === "admin" || currentUser.role === "management";
-
   const myLeadIds = new Set(pipelines.filter((p) => p.ownerId === currentUser.id).map((p) => p.leadId));
 
   const filteredLeads = leads.filter((l) => {
@@ -58,18 +54,6 @@ const LeadsPage: React.FC = () => {
     return leads.find((l) => l.id === leadId)?.updatedAt || "—";
   };
 
-  // Nudge quick actions — open drawer instead of inline panel
-  const handleNudgeSchedule = (leadId: string) => {
-    setOpenDrawerLeadId(leadId);
-    setDrawerTab("meetings");
-  };
-  const handleNudgePipeline = (leadId: string) => {
-    setOpenDrawerLeadId(leadId);
-    setDrawerTab("pipeline");
-  };
-  const handleNudgeNotes = (_meetingId?: string, leadId?: string) => {
-    if (leadId) { setOpenDrawerLeadId(leadId); setDrawerTab("meetings"); }
-  };
 
   // Preview panel data helpers
   const getPreviewData = (lead: Lead) => {
@@ -117,16 +101,6 @@ const LeadsPage: React.FC = () => {
         <Button onClick={() => setShowCreateModal(true)} className="gap-2">
           <Plus size={16} />New Lead
         </Button>
-      </div>
-
-      {/* Pending Actions */}
-      <div className="px-6 shrink-0">
-        <PendingActions
-          nudges={nudges}
-          onScheduleMeeting={handleNudgeSchedule}
-          onUpdatePipeline={handleNudgePipeline}
-          onAddNotes={handleNudgeNotes}
-        />
       </div>
 
       {/* Filters */}
