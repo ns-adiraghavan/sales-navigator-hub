@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
-import { User, Lead, Company, Meeting, Proposal, UserPipeline } from "@/data/types";
-import { CURRENT_USER, USERS, COMPANIES, LEADS, MEETINGS, PROPOSALS, USER_PIPELINES } from "@/data/mockData";
+import { User, Lead, Company, Meeting, Proposal, UserPipeline, TeamLink } from "@/data/types";
+import { CURRENT_USER, USERS, COMPANIES, LEADS, MEETINGS, PROPOSALS, USER_PIPELINES, TEAM_LINKS } from "@/data/mockData";
 
 interface AppState {
   currentUser: User;
@@ -10,6 +10,7 @@ interface AppState {
   meetings: Meeting[];
   proposals: Proposal[];
   pipelines: UserPipeline[];
+  teamLinks: TeamLink[];
   setCurrentUser: (u: User) => void;
   addLead: (lead: Lead) => void;
   updateLead: (lead: Lead) => void;
@@ -26,12 +27,25 @@ interface AppState {
   addProposal: (proposal: Proposal) => void;
   deleteProposal: (id: string) => void;
   upsertPipeline: (pipeline: UserPipeline) => void;
+  upsertTeamLink: (link: TeamLink) => void;
+  removeTeamLink: (bdId: string) => void;
   /** Returns the current user's pipeline for a given lead, or undefined */
   getMyPipeline: (leadId: string) => UserPipeline | undefined;
   /** Returns ALL pipelines for a lead (for management/admin) */
   getPipelinesForLead: (leadId: string) => UserPipeline[];
   /** Returns proposals for a given pipeline thread */
   getProposalsForPipeline: (pipelineId: string) => Proposal[];
+  /**
+   * Returns the set of lead IDs visible to the given user based on their role:
+   *  - admin/management: all leads
+   *  - sales: own pipelines + pipelines owned by their BDs
+   *  - bd: leads they personally entered (scheduledById on meetings / pipeline ownerId)
+   */
+  getVisibleLeadIds: (userId: string) => Set<string>;
+  /** Whether the given user can access pipeline views */
+  canViewPipeline: (userId: string) => boolean;
+  /** BD users that report to a given sales user */
+  getBDsForSales: (salesId: string) => User[];
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -44,6 +58,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [meetings, setMeetings] = useState<Meeting[]>(MEETINGS);
   const [proposals, setProposals] = useState<Proposal[]>(PROPOSALS);
   const [pipelines, setPipelines] = useState<UserPipeline[]>(USER_PIPELINES);
+  const [teamLinks, setTeamLinks] = useState<TeamLink[]>(TEAM_LINKS);
 
   const addLead = (lead: Lead) => setLeads((prev) => [...prev, lead]);
   const updateLead = (lead: Lead) =>
@@ -77,6 +92,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const upsertTeamLink = (link: TeamLink) => {
+    setTeamLinks((prev) => {
+      const exists = prev.find((l) => l.bdId === link.bdId);
+      if (exists) return prev.map((l) => (l.bdId === link.bdId ? link : l));
+      return [...prev, link];
+    });
+    // Also update the reportsTo on the BD user
+    setUsers((prev) =>
+      prev.map((u) => (u.id === link.bdId ? { ...u, reportsTo: link.salesId } : u))
+    );
+  };
+
+  const removeTeamLink = (bdId: string) => {
+    setTeamLinks((prev) => prev.filter((l) => l.bdId !== bdId));
+    setUsers((prev) =>
+      prev.map((u) => (u.id === bdId ? { ...u, reportsTo: undefined } : u))
+    );
+  };
+
   const getMyPipeline = (leadId: string): UserPipeline | undefined =>
     pipelines.find((p) => p.leadId === leadId && p.ownerId === currentUser.id);
 
@@ -86,17 +120,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const getProposalsForPipeline = (pipelineId: string): Proposal[] =>
     proposals.filter((p) => p.pipelineId === pipelineId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
+  const getBDsForSales = (salesId: string): User[] => {
+    const bdIds = new Set(teamLinks.filter((l) => l.salesId === salesId).map((l) => l.bdId));
+    return users.filter((u) => bdIds.has(u.id));
+  };
+
+  const canViewPipeline = (userId: string): boolean => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return false;
+    return user.role !== "bd";
+  };
+
+  const getVisibleLeadIds = (userId: string): Set<string> => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return new Set();
+
+    // admin & management see everything
+    if (user.role === "admin" || user.role === "management") {
+      return new Set(leads.map((l) => l.id));
+    }
+
+    // sales: own pipeline leads + leads entered by their BDs
+    if (user.role === "sales") {
+      const ownLeadIds = new Set(pipelines.filter((p) => p.ownerId === userId).map((p) => p.leadId));
+      const bdIds = new Set(teamLinks.filter((l) => l.salesId === userId).map((l) => l.bdId));
+      const bdLeadIds = new Set(
+        meetings
+          .filter((m) => bdIds.has(m.scheduledById))
+          .map((m) => m.leadId)
+      );
+      return new Set([...ownLeadIds, ...bdLeadIds]);
+    }
+
+    // bd: leads they personally created meetings for
+    if (user.role === "bd") {
+      return new Set(meetings.filter((m) => m.scheduledById === userId).map((m) => m.leadId));
+    }
+
+    return new Set();
+  };
+
   return (
     <AppContext.Provider
       value={{
-        currentUser, users, companies, leads, meetings, proposals, pipelines,
+        currentUser, users, companies, leads, meetings, proposals, pipelines, teamLinks,
         setCurrentUser,
         addLead, updateLead, deleteLead,
         addMeeting, updateMeeting, deleteMeeting,
         addCompany, updateCompany,
         addUser, updateUser, deleteUser,
         addProposal, updateProposal, deleteProposal,
-        upsertPipeline, getMyPipeline, getPipelinesForLead, getProposalsForPipeline,
+        upsertPipeline, upsertTeamLink, removeTeamLink,
+        getMyPipeline, getPipelinesForLead, getProposalsForPipeline,
+        getVisibleLeadIds, canViewPipeline, getBDsForSales,
       }}
     >
       {children}
