@@ -28,7 +28,9 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
     addMeeting, updateMeeting,
     getMyPipeline, getPipelinesForLead, upsertPipeline,
     getProposalsForPipeline, addProposal, updateProposal, deleteProposal,
+    currency, usdToInrRate,
   } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
 
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);
