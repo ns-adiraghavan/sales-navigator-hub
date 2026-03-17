@@ -412,6 +412,8 @@ interface ProposalCardProps {
 const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isExpanded, onToggle, onUpdate, onDelete, canEdit }) => {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(proposal);
+  const { currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
