@@ -289,7 +289,7 @@ const PipelinePage: React.FC = () => {
                     </div>
                     <Badge variant="secondary">{stage.count} thread{stage.count !== 1 ? "s" : ""}</Badge>
                   </div>
-                  <p className="text-2xl font-bold text-foreground mt-2">{formatCurrency(stage.value)}</p>
+                  <p className="text-2xl font-bold text-foreground mt-2">{fmt(stage.value)}</p>
                   <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full"
