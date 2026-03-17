@@ -330,106 +330,108 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meetin
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg flex flex-col max-h-[90vh]">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{meeting ? "Edit Meeting" : "Schedule Meeting"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label>Meeting Title *</Label>
-            <Input value={form.title || ""} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Discovery Call" />
-          </div>
-
-          {/* Meeting type toggle */}
-          <div className="space-y-1.5">
-            <Label>Meeting Type</Label>
-            <div className="flex rounded-md border border-input overflow-hidden">
-              <button
-                type="button"
-                onClick={() => set("meetingType", "online")}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2 text-sm transition-colors",
-                  form.meetingType === "online"
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "bg-background text-muted-foreground hover:bg-muted"
-                )}
-              >
-                <Video size={14} /> Online
-              </button>
-              <button
-                type="button"
-                onClick={() => set("meetingType", "in-person")}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2 text-sm transition-colors border-l border-input",
-                  form.meetingType === "in-person"
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "bg-background text-muted-foreground hover:bg-muted"
-                )}
-              >
-                <MapPin size={14} /> In-Person
-              </button>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="space-y-4 py-2 px-1">
+            <div className="space-y-1.5">
+              <Label>Meeting Title *</Label>
+              <Input value={form.title || ""} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Discovery Call" />
             </div>
-          </div>
 
-          {/* Location / link field */}
-          <div className="space-y-1.5">
-            <Label>{form.meetingType === "in-person" ? "Location / Address" : "Meeting Link"}</Label>
-            <Input
-              value={form.location || ""}
-              onChange={(e) => set("location", e.target.value)}
-              placeholder={form.meetingType === "in-person" ? "e.g. 123 Main St, London" : "e.g. https://meet.google.com/..."}
-            />
-          </div>
+            {/* Meeting type toggle */}
+            <div className="space-y-1.5">
+              <Label>Meeting Type</Label>
+              <div className="flex rounded-md border border-input overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => set("meetingType", "online")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-sm transition-colors",
+                    form.meetingType === "online"
+                      ? "bg-primary text-primary-foreground font-medium"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <Video size={14} /> Online
+                </button>
+                <button
+                  type="button"
+                  onClick={() => set("meetingType", "in-person")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-sm transition-colors border-l border-input",
+                    form.meetingType === "in-person"
+                      ? "bg-primary text-primary-foreground font-medium"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <MapPin size={14} /> In-Person
+                </button>
+              </div>
+            </div>
 
-          <div className="space-y-1.5">
-            <Label>Associated Lead *</Label>
-            <Select value={form.leadId || ""} onValueChange={(v) => set("leadId", v)}>
-              <SelectTrigger><SelectValue placeholder="Select lead" /></SelectTrigger>
-              <SelectContent>
-                {leads.map((l) => {
-                  const co = companies.find((c) => c.id === l.companyId);
-                  return <SelectItem key={l.id} value={l.id}>{l.prospectName} · {co?.name}</SelectItem>;
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2 space-y-1.5">
-              <Label>Date *</Label>
-              <Input type="date" value={form.date || ""} onChange={(e) => set("date", e.target.value)} />
+            {/* Location / link field */}
+            <div className="space-y-1.5">
+              <Label>{form.meetingType === "in-person" ? "Location / Address" : "Meeting Link"}</Label>
+              <Input
+                value={form.location || ""}
+                onChange={(e) => set("location", e.target.value)}
+                placeholder={form.meetingType === "in-person" ? "e.g. 123 Main St, London" : "e.g. https://meet.google.com/..."}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Associated Lead *</Label>
+              <Select value={form.leadId || ""} onValueChange={(v) => set("leadId", v)}>
+                <SelectTrigger><SelectValue placeholder="Select lead" /></SelectTrigger>
+                <SelectContent>
+                  {leads.map((l) => {
+                    const co = companies.find((c) => c.id === l.companyId);
+                    return <SelectItem key={l.id} value={l.id}>{l.prospectName} · {co?.name}</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2 space-y-1.5">
+                <Label>Date *</Label>
+                <Input type="date" value={form.date || ""} onChange={(e) => set("date", e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Time *</Label>
+                <Input type="time" value={form.time || ""} onChange={(e) => set("time", e.target.value)} />
+              </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Time *</Label>
-              <Input type="time" value={form.time || ""} onChange={(e) => set("time", e.target.value)} />
+              <Label>Duration (minutes)</Label>
+              <Select value={String(form.duration || 60)} onValueChange={(v) => set("duration", Number(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[15, 30, 45, 60, 90, 120].map((d) => <SelectItem key={d} value={String(d)}>{d} min</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label>Notes</Label>
+              <Textarea value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} placeholder="Pre-meeting notes..." rows={2} />
+            </div>
+            {meeting && (
+              <>
+                <div className="space-y-1.5">
+                  <Label>Outcome</Label>
+                  <Input value={form.outcome || ""} onChange={(e) => set("outcome", e.target.value)} placeholder="Meeting outcome..." />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Meeting Minutes</Label>
+                  <Textarea value={form.minutes || ""} onChange={(e) => set("minutes", e.target.value)} placeholder="Key takeaways and action items..." rows={3} />
+                </div>
+              </>
+            )}
           </div>
-          <div className="space-y-1.5">
-            <Label>Duration (minutes)</Label>
-            <Select value={String(form.duration || 60)} onValueChange={(v) => set("duration", Number(v))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[15, 30, 45, 60, 90, 120].map((d) => <SelectItem key={d} value={String(d)}>{d} min</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Notes</Label>
-            <Textarea value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} placeholder="Pre-meeting notes..." rows={2} />
-          </div>
-          {meeting && (
-            <>
-              <div className="space-y-1.5">
-                <Label>Outcome</Label>
-                <Input value={form.outcome || ""} onChange={(e) => set("outcome", e.target.value)} placeholder="Meeting outcome..." />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Meeting Minutes</Label>
-                <Textarea value={form.minutes || ""} onChange={(e) => set("minutes", e.target.value)} placeholder="Key takeaways and action items..." rows={3} />
-              </div>
-            </>
-          )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="shrink-0 pt-2">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSave} disabled={!form.title || !form.leadId || !form.date || !form.time}>
             {meeting ? "Update Meeting" : "Schedule"}
