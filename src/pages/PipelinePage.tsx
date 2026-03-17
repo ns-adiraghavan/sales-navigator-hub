@@ -151,7 +151,7 @@ const PipelinePage: React.FC = () => {
                               <div className="flex items-center justify-between">
                                 {pValue > 0 ? (
                                   <span className={`text-xs font-bold ${isClosed(pipeline) ? "text-muted-foreground" : "text-primary"}`}>
-                                    {formatCurrency(pValue)}
+                                   {fmt(pValue)}
                                     {isClosed(pipeline) && <span className="ml-1 font-normal opacity-70">deal</span>}
                                   </span>
                                 ) : <span />}
