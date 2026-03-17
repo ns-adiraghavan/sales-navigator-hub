@@ -145,14 +145,14 @@ const ChatPage: React.FC = () => {
       const wonPipelines = pipelines.filter((p) => p.stage === "Closed Won");
       const wonValue = wonPipelines.reduce((s, p) => s + pipelineValue(p.id), 0);
       return {
-        text: `We have **${wonPipelines.length} Closed Won** pipeline thread(s) worth **${formatCurrency(wonValue)}** total.`,
+        text: `We have **${wonPipelines.length} Closed Won** pipeline thread(s) worth **${fmt(wonValue)}** total.`,
         data: {
           type: "list",
           items: wonPipelines.map((p) => {
             const lead = leads.find((l) => l.id === p.leadId);
             const company = companies.find((c) => c.id === lead?.companyId);
             const owner = users.find((u) => u.id === p.ownerId);
-            return { Prospect: lead?.prospectName || "—", Company: company?.name || "—", Owner: owner?.name || "—", Value: formatCurrency(pipelineValue(p.id)) };
+            return { Prospect: lead?.prospectName || "—", Company: company?.name || "—", Owner: owner?.name || "—", Value: fmt(pipelineValue(p.id)) };
           }),
           label: "Closed Won Deals",
         },
