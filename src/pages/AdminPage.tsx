@@ -81,6 +81,7 @@ const AdminPage: React.FC = () => {
           <TabsTrigger value="hierarchy" className="px-4 text-sm">Team Hierarchy</TabsTrigger>
           <TabsTrigger value="companies" className="px-4 text-sm">Company Records</TabsTrigger>
           <TabsTrigger value="leads"     className="px-4 text-sm">All Leads</TabsTrigger>
+          <TabsTrigger value="settings"  className="px-4 text-sm">Settings</TabsTrigger>
         </TabsList>
 
         {/* ─── Users tab ─── */}
