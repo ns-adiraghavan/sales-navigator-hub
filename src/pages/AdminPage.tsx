@@ -28,7 +28,8 @@ const ROLE_PERMISSIONS: Record<UserRole, string> = {
 };
 
 const AdminPage: React.FC = () => {
-  const { currentUser, users, leads, companies, pipelines, teamLinks, addUser, updateUser, deleteUser, upsertTeamLink, removeTeamLink } = useApp();
+  const { currentUser, users, leads, companies, pipelines, teamLinks, addUser, updateUser, deleteUser, upsertTeamLink, removeTeamLink, usdToInrRate, setUsdToInrRate } = useApp();
+  const [rateInput, setRateInput] = useState(String(usdToInrRate));
   const [showUserModal, setShowUserModal] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
 
