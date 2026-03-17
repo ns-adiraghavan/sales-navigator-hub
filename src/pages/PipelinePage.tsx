@@ -242,7 +242,7 @@ const PipelinePage: React.FC = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right text-muted-foreground">
-                        {isClosed(pipeline) ? "—" : formatCurrency(pExpected)}
+                        {isClosed(pipeline) ? "—" : fmt(pExpected)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Badge variant="secondary" className="text-xs">{pProposals.length}</Badge>
