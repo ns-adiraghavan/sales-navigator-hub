@@ -192,7 +192,7 @@ const PipelinePage: React.FC = () => {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Company</th>
                   {isElevated && <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Owner</th>}
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Stage</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Total Value</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Value</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Expected</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Proposals</th>
                 </tr>
