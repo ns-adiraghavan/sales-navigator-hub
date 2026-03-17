@@ -144,25 +144,28 @@ const PipelinePage: React.FC = () => {
                           className="shadow-card border-border cursor-pointer hover:shadow-card-md transition-shadow"
                           onClick={() => setSelectedLeadId(pipeline.leadId)}
                         >
-                          <CardContent className="p-3">
-                            <p className="font-semibold text-sm text-foreground mb-0.5">{lead?.prospectName}</p>
-                            <p className="text-xs text-muted-foreground mb-2">{company?.name}</p>
-                            <div className="flex items-center justify-between">
-                              {pValue > 0 ? (
-                                <span className="text-xs font-bold text-primary">{formatCurrency(pValue)}</span>
-                              ) : <span />}
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className={`text-xs ${isMe ? "bg-primary text-white" : "bg-secondary text-secondary-foreground"}`}>{owner?.avatar}</AvatarFallback>
-                              </Avatar>
-                            </div>
-                            {prob !== undefined && prob > 0 && (
-                              <div className="mt-2">
-                                <div className="h-1 bg-muted rounded-full overflow-hidden">
-                                  <div className="h-full bg-primary rounded-full" style={{ width: `${prob}%` }} />
-                                </div>
-                                <span className="text-xs text-muted-foreground">{prob}% probability</span>
+                            <CardContent className="p-3">
+                              <p className="font-semibold text-sm text-foreground mb-0.5">{lead?.prospectName}</p>
+                              <p className="text-xs text-muted-foreground mb-2">{company?.name}</p>
+                              <div className="flex items-center justify-between">
+                                {pValue > 0 ? (
+                                  <span className={`text-xs font-bold ${isClosed(pipeline) ? "text-muted-foreground" : "text-primary"}`}>
+                                    {formatCurrency(pValue)}
+                                    {isClosed(pipeline) && <span className="ml-1 font-normal opacity-70">deal</span>}
+                                  </span>
+                                ) : <span />}
+                                <Avatar className="h-5 w-5">
+                                  <AvatarFallback className={`text-xs ${isMe ? "bg-primary text-white" : "bg-secondary text-secondary-foreground"}`}>{owner?.avatar}</AvatarFallback>
+                                </Avatar>
                               </div>
-                            )}
+                              {!isClosed(pipeline) && prob !== undefined && prob > 0 && (
+                                <div className="mt-2">
+                                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                                    <div className="h-full bg-primary rounded-full" style={{ width: `${prob}%` }} />
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">{prob}% probability</span>
+                                </div>
+                              )}
                           </CardContent>
                         </Card>
                       );
