@@ -132,8 +132,8 @@ const DashboardPage: React.FC = () => {
               <BarChart data={stageData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 20% 92%)" />
                 <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
-                <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} labelFormatter={(l, payload) => payload?.[0]?.payload?.fullStage || l} />
+                <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v: number) => fmt(v)} labelFormatter={(l, payload) => payload?.[0]?.payload?.fullStage || l} />
                 <Bar dataKey="value" fill="hsl(18 100% 50%)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
