@@ -3,6 +3,7 @@ import { useApp } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, Calendar, TrendingUp, DollarSign, Target, ArrowUp } from "lucide-react";
 import { formatCurrency, getPipelineDisplayValue, getPipelineDisplayExpected, CLOSED_STAGES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
