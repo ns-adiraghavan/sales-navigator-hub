@@ -351,7 +351,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
                             </div>
                             <div>
                               <p className="text-muted-foreground">Total Value</p>
-                              <p className="font-semibold text-foreground">{formatCurrency(totalValue)}</p>
+                              <p className="font-semibold text-foreground">{fmt(totalValue)}</p>
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground">Updated {p.updatedAt}</p>
