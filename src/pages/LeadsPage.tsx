@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Lead, UserPipeline } from "@/data/types";
+import { Lead, UserPipeline, Company, INDUSTRY_OPTIONS } from "@/data/types";
 import { generateId } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
