@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { X, Mail, Phone, Linkedin, Clock, Plus, Building2, Target, Pencil, User, AlertCircle, FileText, Upload, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Mail, Phone, Linkedin, Clock, Plus, Building2, Target, Pencil, User, AlertCircle, FileText, Upload, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MeetingFormModal } from "@/pages/MeetingsPage";
 import { Meeting } from "@/data/types";
