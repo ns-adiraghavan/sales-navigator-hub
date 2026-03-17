@@ -82,7 +82,7 @@ const CompaniesPage: React.FC = () => {
                   </div>
                   <div className="text-right hidden md:block">
                     <p className="text-xs text-muted-foreground">Total Pipeline</p>
-                    <p className="font-bold text-primary">{formatCurrency(totalValue)}</p>
+                    <p className="font-bold text-primary">{fmt(totalValue)}</p>
                   </div>
                   {isExpanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
                 </div>
