@@ -14,7 +14,8 @@ import {
 } from "recharts";
 
 const PipelinePage: React.FC = () => {
-  const { leads, companies, users, currentUser, pipelines, proposals, upsertPipeline, getProposalsForPipeline } = useApp();
+  const { leads, companies, users, currentUser, pipelines, proposals, upsertPipeline, getProposalsForPipeline, currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
   const [viewMode, setViewMode] = useState<"kanban" | "table" | "chart">("kanban");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
