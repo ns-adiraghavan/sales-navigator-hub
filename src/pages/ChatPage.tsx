@@ -164,8 +164,8 @@ const ChatPage: React.FC = () => {
       const withValue = proposals.filter((p) => p.value > 0);
       const avg = withValue.length ? withValue.reduce((s, p) => s + p.value, 0) / withValue.length : 0;
       return {
-        text: `The **average deal size** is **${formatCurrency(avg)}** based on ${withValue.length} proposal(s) with a value.`,
-        data: { type: "value", value: formatCurrency(avg), label: "Average Deal Size" },
+        text: `The **average deal size** is **${fmt(avg)}** based on ${withValue.length} proposal(s) with a value.`,
+        data: { type: "value", value: fmt(avg), label: "Average Deal Size" },
       };
     }
 
