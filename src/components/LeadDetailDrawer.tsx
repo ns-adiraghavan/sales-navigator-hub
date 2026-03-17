@@ -190,7 +190,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
                         )}
                       </div>
                       {meeting.outcome && (
-                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">{meeting.outcome}</Badge>
+                        <Badge variant="outline" className="text-xs border-primary/30 bg-primary/5 text-primary">{meeting.outcome}</Badge>
                       )}
                       {meeting.notes && <p className="text-xs text-muted-foreground">{meeting.notes}</p>}
                       {meeting.minutes && (
