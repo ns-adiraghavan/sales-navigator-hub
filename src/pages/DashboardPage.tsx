@@ -67,18 +67,37 @@ const DashboardPage: React.FC = () => {
 
   const statCards = [
     { title: "Total Leads", value: totalLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50", change: "+12%" },
-    { title: "Active Pipeline", value: formatCurrency(totalPipelineValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50", change: "+8%" },
-    { title: "Revenue Forecast", value: formatCurrency(forecastedRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50", change: "+5%" },
+    { title: "Active Pipeline", value: fmt(totalPipelineValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50", change: "+8%" },
+    { title: "Revenue Forecast", value: fmt(forecastedRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50", change: "+5%" },
     { title: "Meetings (7d)", value: meetingsThisWeek, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", change: `${meetingsThisWeek} upcoming` },
     { title: "Companies", value: companies.length, icon: Building2, color: "text-teal-600", bg: "bg-teal-50", change: "+2 this month" },
-    { title: "Closed Won", value: formatCurrency(closedRevenue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50", change: `${closedWonPipelines.length} deals` },
+    { title: "Closed Won", value: fmt(closedRevenue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50", change: `${closedWonPipelines.length} deals` },
   ];
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Sales Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Overview of your pipeline and activity</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Sales Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Overview of your pipeline and activity</p>
+        </div>
+        {/* Currency toggle */}
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1 shrink-0">
+          {(["INR", "USD"] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => setCurrency(c)}
+              className={cn(
+                "px-3 py-1 rounded-md text-xs font-semibold transition-colors",
+                currency === c
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {c === "INR" ? "₹ INR" : "$ USD"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stat Cards */}
