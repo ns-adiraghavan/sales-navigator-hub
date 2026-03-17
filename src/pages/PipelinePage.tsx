@@ -268,9 +268,9 @@ const PipelinePage: React.FC = () => {
                 <BarChart data={stageStats} margin={{ top: 5, right: 20, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 20% 92%)" />
                   <XAxis dataKey="stage" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" />
-                  <YAxis yAxisId="left" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="left" tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number, name: string) => [name === "value" ? formatCurrency(v) : v, name === "value" ? "Pipeline Value" : "Thread Count"]} />
+                  <Tooltip formatter={(v: number, name: string) => [name === "value" ? fmt(v) : v, name === "value" ? "Pipeline Value" : "Thread Count"]} />
                   <Bar yAxisId="left" dataKey="value" fill="hsl(18 100% 50%)" radius={[4, 4, 0, 0]} name="value" />
                   <Bar yAxisId="right" dataKey="count" fill="hsl(210 100% 56%)" radius={[4, 4, 0, 0]} name="count" />
                 </BarChart>
