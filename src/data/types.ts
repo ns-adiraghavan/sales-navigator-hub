@@ -130,5 +130,8 @@ export interface Meeting {
   outcome?: string;
   minutes?: string;
   attendees?: string[];
+  /** PDF/doc attachment for meeting notes */
+  attachmentName?: string;
+  attachmentUrl?: string;
   createdAt: string;
 }

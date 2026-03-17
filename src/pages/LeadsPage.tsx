@@ -407,14 +407,36 @@ interface LeadFormModalProps {
 }
 
 export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClose, onSave }) => {
-  const { companies, leads, currentUser } = useApp();
+  const { companies, leads, currentUser, addCompany } = useApp();
   const [form, setForm] = useState<Partial<Lead>>(lead || {});
   const [emailError, setEmailError] = useState("");
+  // Inline new-company state
+  const [showNewCompany, setShowNewCompany] = useState(false);
+  const [newCompanyName, setNewCompanyName] = useState("");
+  const [newCompanyIndustry, setNewCompanyIndustry] = useState("");
 
   React.useEffect(() => {
     setForm(lead || {});
     setEmailError("");
+    setShowNewCompany(false);
+    setNewCompanyName("");
+    setNewCompanyIndustry("");
   }, [lead, open]);
+
+  const handleCreateCompany = () => {
+    if (!newCompanyName.trim()) return;
+    const company: Company = {
+      id: generateId(),
+      name: newCompanyName.trim(),
+      industry: newCompanyIndustry.trim() || "Other",
+      createdAt: new Date().toISOString().split("T")[0],
+    };
+    addCompany(company);
+    setForm((prev) => ({ ...prev, companyId: company.id }));
+    setShowNewCompany(false);
+    setNewCompanyName("");
+    setNewCompanyIndustry("");
+  };
 
   const handleSubmit = () => {
     if (!form.prospectName || !form.companyId || !form.email) return;
@@ -455,6 +477,8 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
 
   const set = (key: keyof Lead, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
 
+  const selectedCompany = companies.find((c) => c.id === form.companyId);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
@@ -468,13 +492,43 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
               <Input value={form.prospectName || ""} onChange={(e) => set("prospectName", e.target.value)} placeholder="Full name" />
             </div>
             <div className="space-y-1.5">
-              <Label>Company *</Label>
-              <Select value={form.companyId || ""} onValueChange={(v) => set("companyId", v)}>
-                <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
-                <SelectContent>
-                  {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label>Company *</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewCompany((v) => !v)}
+                  className="text-xs text-primary hover:underline flex items-center gap-0.5"
+                >
+                  <Plus size={11} />{showNewCompany ? "Cancel" : "New"}
+                </button>
+              </div>
+              {showNewCompany ? (
+                <div className="space-y-2 border border-dashed border-border rounded-md p-2.5">
+                  <Input
+                    value={newCompanyName}
+                    onChange={(e) => setNewCompanyName(e.target.value)}
+                    placeholder="Company name *"
+                    className="h-8 text-xs"
+                    autoFocus
+                  />
+                  <Select value={newCompanyIndustry} onValueChange={setNewCompanyIndustry}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Industry (optional)" /></SelectTrigger>
+                    <SelectContent>
+                      {INDUSTRY_OPTIONS.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" className="h-7 text-xs w-full" onClick={handleCreateCompany} disabled={!newCompanyName.trim()}>
+                    Add Company
+                  </Button>
+                </div>
+              ) : (
+                <Select value={form.companyId || ""} onValueChange={(v) => set("companyId", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select company">{selectedCompany?.name}</SelectValue></SelectTrigger>
+                  <SelectContent>
+                    {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <div className="space-y-1.5">
