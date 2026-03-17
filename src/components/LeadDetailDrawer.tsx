@@ -454,11 +454,11 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isExpanded, onTog
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div>
                   <p className="text-muted-foreground">Value</p>
-                  <p className="font-semibold">{formatCurrency(proposal.value)}</p>
+                  <p className="font-semibold">{fmt(proposal.value)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Expected</p>
-                  <p className="font-semibold">{formatCurrency(proposal.expectedRevenue)}</p>
+                  <p className="font-semibold">{fmt(proposal.expectedRevenue)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Probability</p>
