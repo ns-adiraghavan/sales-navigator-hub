@@ -389,6 +389,9 @@ const AdminPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
+      {/* ─── Settings tab ─── */}
+      
+
       {/* User modal */}
       <UserFormModal
         open={showUserModal}
