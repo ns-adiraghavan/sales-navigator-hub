@@ -440,7 +440,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isExpanded, onTog
           <span className="text-sm font-medium text-foreground truncate">{proposal.title}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-2">
-          <span className="text-sm font-bold text-primary">{formatCurrency(proposal.value)}</span>
+          <span className="text-sm font-bold text-primary">{fmt(proposal.value)}</span>
           <Badge className={`text-xs border ${STAGE_COLORS[proposal.stage]}`} variant="outline">{proposal.stage}</Badge>
           {isExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
         </div>
