@@ -235,7 +235,7 @@ const PipelinePage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">
                         <span className={isClosed(pipeline) ? "text-muted-foreground" : "text-foreground"}>
-                          {formatCurrency(pValue)}
+                          {fmt(pValue)}
                         </span>
                         {isClosed(pipeline) && (
                           <span className="block text-xs text-muted-foreground font-normal">deal value</span>
