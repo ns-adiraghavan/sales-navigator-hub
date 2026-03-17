@@ -93,8 +93,8 @@ const ChatPage: React.FC = () => {
     if (q.includes("forecast") || q.includes("expected revenue")) {
       const total = proposals.reduce((s, p) => s + p.expectedRevenue, 0);
       return {
-        text: `The **total revenue forecast** is **${formatCurrency(total)}**, weighted by probability across all active deals.`,
-        data: { type: "value", value: formatCurrency(total), label: "Revenue Forecast" },
+        text: `The **total revenue forecast** is **${fmt(total)}**, weighted by probability across all active deals.`,
+        data: { type: "value", value: fmt(total), label: "Revenue Forecast" },
       };
     }
 
