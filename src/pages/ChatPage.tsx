@@ -38,7 +38,8 @@ const SUGGESTED_QUERIES = [
 ];
 
 const ChatPage: React.FC = () => {
-  const { leads, companies, meetings, pipelines, proposals, users } = useApp();
+  const { leads, companies, meetings, pipelines, proposals, users, currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
