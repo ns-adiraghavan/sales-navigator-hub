@@ -232,8 +232,17 @@ const PipelinePage: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(pValue)}</td>
-                      <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(pExpected)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">
+                        <span className={isClosed(pipeline) ? "text-muted-foreground" : "text-foreground"}>
+                          {formatCurrency(pValue)}
+                        </span>
+                        {isClosed(pipeline) && (
+                          <span className="block text-xs text-muted-foreground font-normal">deal value</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">
+                        {isClosed(pipeline) ? "—" : formatCurrency(pExpected)}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <Badge variant="secondary" className="text-xs">{pProposals.length}</Badge>
                       </td>
