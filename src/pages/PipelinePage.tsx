@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { UserPipeline, PipelineStage } from "@/data/types";
-import { PIPELINE_STAGES, STAGE_COLORS, STAGE_DOT, formatCurrency, generateId } from "@/lib/constants";
+import { PIPELINE_STAGES, STAGE_COLORS, STAGE_DOT, formatCurrency, generateId, getPipelineDisplayValue, getPipelineDisplayExpected, CLOSED_STAGES } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,12 +35,14 @@ const PipelinePage: React.FC = () => {
     ? pipelines
     : pipelines.filter((p) => p.ownerId === currentUser.id);
 
-  // Aggregate value from proposals linked to visible pipelines
+  const isClosed = (pipeline: UserPipeline) => CLOSED_STAGES.includes(pipeline.stage);
+
+  // Active: sum all proposals. Closed: sum only matched-stage proposals.
   const getPipelineValue = (pipeline: UserPipeline) =>
-    getProposalsForPipeline(pipeline.id).reduce((s, p) => s + p.value, 0);
+    getPipelineDisplayValue(pipeline, proposals);
 
   const getPipelineExpected = (pipeline: UserPipeline) =>
-    getProposalsForPipeline(pipeline.id).reduce((s, p) => s + p.expectedRevenue, 0);
+    getPipelineDisplayExpected(pipeline, proposals);
 
   const getPipelineMaxProb = (pipeline: UserPipeline) => {
     const props = getProposalsForPipeline(pipeline.id).filter((p) => p.probability !== undefined);
@@ -48,11 +50,14 @@ const PipelinePage: React.FC = () => {
     return Math.max(...props.map((p) => p.probability!));
   };
 
-  const totalValue = visiblePipelines.reduce((s, p) => s + getPipelineValue(p), 0);
-  const forecastRevenue = visiblePipelines.reduce((s, p) => s + getPipelineExpected(p), 0);
+  // "Total Pipeline" = active threads only
+  const activePipelines = visiblePipelines.filter((p) => !isClosed(p));
+  const totalValue = activePipelines.reduce((s, p) => s + getPipelineValue(p), 0);
+  const forecastRevenue = activePipelines.reduce((s, p) => s + getPipelineExpected(p), 0);
+
+  // Closed Won deal value
   const wonPipelines = visiblePipelines.filter((p) => p.stage === "Closed Won");
   const wonValue = wonPipelines.reduce((s, p) => s + getPipelineValue(p), 0);
-  const activePipelines = visiblePipelines.filter((p) => p.stage !== "Closed Won" && p.stage !== "Closed Lost");
 
   const handleStageChange = (pipeline: UserPipeline, stage: PipelineStage) => {
     upsertPipeline({ ...pipeline, stage, updatedAt: new Date().toISOString().split("T")[0] });
@@ -89,7 +94,7 @@ const PipelinePage: React.FC = () => {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Pipeline", value: formatCurrency(totalValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Active Pipeline", value: formatCurrency(totalValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50" },
           { label: "Revenue Forecast", value: formatCurrency(forecastRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
           { label: "Closed Won", value: formatCurrency(wonValue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50" },
           { label: "Active Threads", value: activePipelines.length, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
@@ -139,25 +144,28 @@ const PipelinePage: React.FC = () => {
                           className="shadow-card border-border cursor-pointer hover:shadow-card-md transition-shadow"
                           onClick={() => setSelectedLeadId(pipeline.leadId)}
                         >
-                          <CardContent className="p-3">
-                            <p className="font-semibold text-sm text-foreground mb-0.5">{lead?.prospectName}</p>
-                            <p className="text-xs text-muted-foreground mb-2">{company?.name}</p>
-                            <div className="flex items-center justify-between">
-                              {pValue > 0 ? (
-                                <span className="text-xs font-bold text-primary">{formatCurrency(pValue)}</span>
-                              ) : <span />}
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className={`text-xs ${isMe ? "bg-primary text-white" : "bg-secondary text-secondary-foreground"}`}>{owner?.avatar}</AvatarFallback>
-                              </Avatar>
-                            </div>
-                            {prob !== undefined && prob > 0 && (
-                              <div className="mt-2">
-                                <div className="h-1 bg-muted rounded-full overflow-hidden">
-                                  <div className="h-full bg-primary rounded-full" style={{ width: `${prob}%` }} />
-                                </div>
-                                <span className="text-xs text-muted-foreground">{prob}% probability</span>
+                            <CardContent className="p-3">
+                              <p className="font-semibold text-sm text-foreground mb-0.5">{lead?.prospectName}</p>
+                              <p className="text-xs text-muted-foreground mb-2">{company?.name}</p>
+                              <div className="flex items-center justify-between">
+                                {pValue > 0 ? (
+                                  <span className={`text-xs font-bold ${isClosed(pipeline) ? "text-muted-foreground" : "text-primary"}`}>
+                                    {formatCurrency(pValue)}
+                                    {isClosed(pipeline) && <span className="ml-1 font-normal opacity-70">deal</span>}
+                                  </span>
+                                ) : <span />}
+                                <Avatar className="h-5 w-5">
+                                  <AvatarFallback className={`text-xs ${isMe ? "bg-primary text-white" : "bg-secondary text-secondary-foreground"}`}>{owner?.avatar}</AvatarFallback>
+                                </Avatar>
                               </div>
-                            )}
+                              {!isClosed(pipeline) && prob !== undefined && prob > 0 && (
+                                <div className="mt-2">
+                                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                                    <div className="h-full bg-primary rounded-full" style={{ width: `${prob}%` }} />
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">{prob}% probability</span>
+                                </div>
+                              )}
                           </CardContent>
                         </Card>
                       );
@@ -184,7 +192,7 @@ const PipelinePage: React.FC = () => {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Company</th>
                   {isElevated && <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Owner</th>}
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Stage</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Total Value</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Value</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Expected</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Proposals</th>
                 </tr>
@@ -224,8 +232,17 @@ const PipelinePage: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(pValue)}</td>
-                      <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(pExpected)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">
+                        <span className={isClosed(pipeline) ? "text-muted-foreground" : "text-foreground"}>
+                          {formatCurrency(pValue)}
+                        </span>
+                        {isClosed(pipeline) && (
+                          <span className="block text-xs text-muted-foreground font-normal">deal value</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">
+                        {isClosed(pipeline) ? "—" : formatCurrency(pExpected)}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <Badge variant="secondary" className="text-xs">{pProposals.length}</Badge>
                       </td>

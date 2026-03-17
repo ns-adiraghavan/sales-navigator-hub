@@ -2,7 +2,7 @@ import React from "react";
 import { useApp } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, Calendar, TrendingUp, DollarSign, Target, ArrowUp } from "lucide-react";
-import { formatCurrency } from "@/lib/constants";
+import { formatCurrency, getPipelineDisplayValue, getPipelineDisplayExpected, CLOSED_STAGES } from "@/lib/constants";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -21,31 +21,38 @@ const DashboardPage: React.FC = () => {
   const totalLeads = leads.length;
   const meetingsThisWeek = meetings.filter((m) => m.date >= today && m.date <= weekEndStr).length;
 
-  // Aggregate from proposals (proposals link to pipeline threads)
-  const totalPipelineValue = proposals.reduce((sum, p) => sum + p.value, 0);
-  const forecastedRevenue = proposals.reduce((sum, p) => sum + p.expectedRevenue, 0);
-  const closedWonPipelines = pipelines.filter((p) => p.stage === "Closed Won");
-  const closedWonPipelineIds = new Set(closedWonPipelines.map((p) => p.id));
-  const closedRevenue = proposals.filter((p) => closedWonPipelineIds.has(p.pipelineId)).reduce((sum, p) => sum + p.value, 0);
+  // Active pipelines only (not closed) → pipeline value = sum of all proposals
+  const activePipelines = pipelines.filter((p) => !CLOSED_STAGES.includes(p.stage));
+  const totalPipelineValue = activePipelines.reduce(
+    (sum, p) => sum + getPipelineDisplayValue(p, proposals), 0
+  );
+  const forecastedRevenue = activePipelines.reduce(
+    (sum, p) => sum + getPipelineDisplayExpected(p, proposals), 0
+  );
 
-  // Pipelines by stage — aggregate proposal values per stage
+  // Closed Won deal value = sum of won proposals only
+  const closedWonPipelines = pipelines.filter((p) => p.stage === "Closed Won");
+  const closedRevenue = closedWonPipelines.reduce(
+    (sum, p) => sum + getPipelineDisplayValue(p, proposals), 0
+  );
+
+  // Stage chart: active stages use all proposal values; closed stages use matched-stage proposal values
   const stageData = STAGE_ORDER.map((stage) => {
     const stagePipelines = pipelines.filter((p) => p.stage === stage);
-    const stagePipelineIds = new Set(stagePipelines.map((p) => p.id));
     return {
       stage: stage.split(" ")[0],
       fullStage: stage,
       count: stagePipelines.length,
-      value: proposals.filter((p) => stagePipelineIds.has(p.pipelineId)).reduce((s, p) => s + p.value, 0),
+      value: stagePipelines.reduce((s, p) => s + getPipelineDisplayValue(p, proposals), 0),
     };
   });
 
-  // Pipeline by company
+  // Pipeline by company — active only for "in pipeline" value
   const companyPipeline = companies
     .map((c) => {
       const compLeadIds = leads.filter((l) => l.companyId === c.id).map((l) => l.id);
-      const compPipelineIds = new Set(pipelines.filter((p) => compLeadIds.includes(p.leadId)).map((p) => p.id));
-      const value = proposals.filter((p) => compPipelineIds.has(p.pipelineId)).reduce((s, p) => s + p.value, 0);
+      const compActivePipelines = activePipelines.filter((p) => compLeadIds.includes(p.leadId));
+      const value = compActivePipelines.reduce((s, p) => s + getPipelineDisplayValue(p, proposals), 0);
       return { name: c.name.split(" ")[0], value, leads: compLeadIds.length };
     })
     .filter((c) => c.value > 0)
@@ -58,7 +65,7 @@ const DashboardPage: React.FC = () => {
 
   const statCards = [
     { title: "Total Leads", value: totalLeads, icon: Users, color: "text-blue-600", bg: "bg-blue-50", change: "+12%" },
-    { title: "Pipeline Value", value: formatCurrency(totalPipelineValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50", change: "+8%" },
+    { title: "Active Pipeline", value: formatCurrency(totalPipelineValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50", change: "+8%" },
     { title: "Revenue Forecast", value: formatCurrency(forecastedRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50", change: "+5%" },
     { title: "Meetings (7d)", value: meetingsThisWeek, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", change: `${meetingsThisWeek} upcoming` },
     { title: "Companies", value: companies.length, icon: Building2, color: "text-teal-600", bg: "bg-teal-50", change: "+2 this month" },
