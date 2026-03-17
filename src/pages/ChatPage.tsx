@@ -363,8 +363,8 @@ const ResultCard: React.FC<{ data: QueryResult }> = ({ data }) => {
             <BarChart data={data.chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 20% 92%)" />
               <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-              <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 10 }} />
-              <Tooltip formatter={(v: number) => formatCurrency(v)} />
+              <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 10 }} />
+              <Tooltip formatter={(v: number) => fmt(v)} />
               <Bar dataKey="value" fill="hsl(18 100% 50%)" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
