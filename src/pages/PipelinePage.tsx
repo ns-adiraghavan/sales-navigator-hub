@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { UserPipeline, PipelineStage } from "@/data/types";
-import { PIPELINE_STAGES, STAGE_COLORS, STAGE_DOT, formatCurrency, generateId } from "@/lib/constants";
+import { PIPELINE_STAGES, STAGE_COLORS, STAGE_DOT, formatCurrency, generateId, getPipelineDisplayValue, getPipelineDisplayExpected, CLOSED_STAGES } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,12 +35,14 @@ const PipelinePage: React.FC = () => {
     ? pipelines
     : pipelines.filter((p) => p.ownerId === currentUser.id);
 
-  // Aggregate value from proposals linked to visible pipelines
+  const isClosed = (pipeline: UserPipeline) => CLOSED_STAGES.includes(pipeline.stage);
+
+  // Active: sum all proposals. Closed: sum only matched-stage proposals.
   const getPipelineValue = (pipeline: UserPipeline) =>
-    getProposalsForPipeline(pipeline.id).reduce((s, p) => s + p.value, 0);
+    getPipelineDisplayValue(pipeline, proposals);
 
   const getPipelineExpected = (pipeline: UserPipeline) =>
-    getProposalsForPipeline(pipeline.id).reduce((s, p) => s + p.expectedRevenue, 0);
+    getPipelineDisplayExpected(pipeline, proposals);
 
   const getPipelineMaxProb = (pipeline: UserPipeline) => {
     const props = getProposalsForPipeline(pipeline.id).filter((p) => p.probability !== undefined);
@@ -48,11 +50,14 @@ const PipelinePage: React.FC = () => {
     return Math.max(...props.map((p) => p.probability!));
   };
 
-  const totalValue = visiblePipelines.reduce((s, p) => s + getPipelineValue(p), 0);
-  const forecastRevenue = visiblePipelines.reduce((s, p) => s + getPipelineExpected(p), 0);
+  // "Total Pipeline" = active threads only
+  const activePipelines = visiblePipelines.filter((p) => !isClosed(p));
+  const totalValue = activePipelines.reduce((s, p) => s + getPipelineValue(p), 0);
+  const forecastRevenue = activePipelines.reduce((s, p) => s + getPipelineExpected(p), 0);
+
+  // Closed Won deal value
   const wonPipelines = visiblePipelines.filter((p) => p.stage === "Closed Won");
   const wonValue = wonPipelines.reduce((s, p) => s + getPipelineValue(p), 0);
-  const activePipelines = visiblePipelines.filter((p) => p.stage !== "Closed Won" && p.stage !== "Closed Lost");
 
   const handleStageChange = (pipeline: UserPipeline, stage: PipelineStage) => {
     upsertPipeline({ ...pipeline, stage, updatedAt: new Date().toISOString().split("T")[0] });
