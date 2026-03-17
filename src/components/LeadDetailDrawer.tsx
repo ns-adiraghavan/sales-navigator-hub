@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Lead, UserPipeline, PipelineStage, Proposal } from "@/data/types";
+import { PipelineStage, Proposal } from "@/data/types";
 import { PIPELINE_STAGES, STAGE_COLORS, formatCurrency, generateId } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
