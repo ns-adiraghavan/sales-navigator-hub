@@ -174,6 +174,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider
       value={{
         currentUser, users, companies, leads, meetings, proposals, pipelines, teamLinks,
+        currency, usdToInrRate, setCurrency, setUsdToInrRate,
         setCurrentUser,
         addLead, updateLead, deleteLead,
         addMeeting, updateMeeting, deleteMeeting,
