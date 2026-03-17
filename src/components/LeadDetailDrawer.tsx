@@ -25,7 +25,7 @@ interface LeadDetailDrawerProps {
 const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, defaultTab = "overview" }) => {
   const {
     leads, companies, users, meetings, currentUser,
-    updateLead, addMeeting, updateMeeting,
+    addMeeting, updateMeeting,
     getMyPipeline, getPipelinesForLead, upsertPipeline,
     getProposalsForPipeline, addProposal, updateProposal, deleteProposal,
   } = useApp();
