@@ -67,6 +67,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [proposals, setProposals] = useState<Proposal[]>(PROPOSALS);
   const [pipelines, setPipelines] = useState<UserPipeline[]>(USER_PIPELINES);
   const [teamLinks, setTeamLinks] = useState<TeamLink[]>(TEAM_LINKS);
+  const [currency, setCurrency] = useState<CurrencyCode>("INR");
+  const [usdToInrRate, setUsdToInrRate] = useState<number>(90);
 
   const addLead = (lead: Lead) => setLeads((prev) => [...prev, lead]);
   const updateLead = (lead: Lead) =>
