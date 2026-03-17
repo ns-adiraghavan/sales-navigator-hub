@@ -128,7 +128,7 @@ const PipelinePage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Badge variant="secondary" className="text-xs h-4 px-1.5">{stagePipelines.length}</Badge>
-                      {stageValue > 0 && <span className="text-xs text-muted-foreground">{formatCurrency(stageValue)}</span>}
+                      {stageValue > 0 && <span className="text-xs text-muted-foreground">{fmt(stageValue)}</span>}
                     </div>
                   </div>
                   <div className="space-y-2 bg-muted/30 rounded-lg p-2 min-h-32">

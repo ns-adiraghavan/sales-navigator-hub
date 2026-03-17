@@ -230,7 +230,7 @@ const DashboardPage: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 20% 92%)" horizontal={false} />
                 <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={70} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Tooltip formatter={(v: number) => fmt(v)} />
                 <Bar dataKey="value" fill="hsl(210 100% 56%)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
