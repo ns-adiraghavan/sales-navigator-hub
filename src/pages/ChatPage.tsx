@@ -73,7 +73,7 @@ const ChatPage: React.FC = () => {
           count: compLeads.length,
           items: compLeads.map((l) => {
             const myPipeline = pipelines.find((p) => p.leadId === l.id);
-            return { Prospect: l.prospectName, Stage: myPipeline?.stage || "No Pipeline", Value: formatCurrency(myPipeline ? pipelineValue(myPipeline.id) : 0) };
+            return { Prospect: l.prospectName, Stage: myPipeline?.stage || "No Pipeline", Value: fmt(myPipeline ? pipelineValue(myPipeline.id) : 0) };
           }),
           label: `Leads for ${companyMatch.name}`,
         },
