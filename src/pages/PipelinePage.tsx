@@ -14,7 +14,8 @@ import {
 } from "recharts";
 
 const PipelinePage: React.FC = () => {
-  const { leads, companies, users, currentUser, pipelines, proposals, upsertPipeline, getProposalsForPipeline } = useApp();
+  const { leads, companies, users, currentUser, pipelines, proposals, upsertPipeline, getProposalsForPipeline, currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
   const [viewMode, setViewMode] = useState<"kanban" | "table" | "chart">("kanban");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
@@ -94,9 +95,9 @@ const PipelinePage: React.FC = () => {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Active Pipeline", value: formatCurrency(totalValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50" },
-          { label: "Revenue Forecast", value: formatCurrency(forecastRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Closed Won", value: formatCurrency(wonValue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Active Pipeline", value: fmt(totalValue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Revenue Forecast", value: fmt(forecastRevenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Closed Won", value: fmt(wonValue), icon: Target, color: "text-emerald-600", bg: "bg-emerald-50" },
           { label: "Active Threads", value: activePipelines.length, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
         ].map((s) => (
           <Card key={s.label} className="shadow-card border-border">
@@ -127,7 +128,7 @@ const PipelinePage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Badge variant="secondary" className="text-xs h-4 px-1.5">{stagePipelines.length}</Badge>
-                      {stageValue > 0 && <span className="text-xs text-muted-foreground">{formatCurrency(stageValue)}</span>}
+                      {stageValue > 0 && <span className="text-xs text-muted-foreground">{fmt(stageValue)}</span>}
                     </div>
                   </div>
                   <div className="space-y-2 bg-muted/30 rounded-lg p-2 min-h-32">
@@ -150,7 +151,7 @@ const PipelinePage: React.FC = () => {
                               <div className="flex items-center justify-between">
                                 {pValue > 0 ? (
                                   <span className={`text-xs font-bold ${isClosed(pipeline) ? "text-muted-foreground" : "text-primary"}`}>
-                                    {formatCurrency(pValue)}
+                                   {fmt(pValue)}
                                     {isClosed(pipeline) && <span className="ml-1 font-normal opacity-70">deal</span>}
                                   </span>
                                 ) : <span />}
@@ -234,14 +235,14 @@ const PipelinePage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">
                         <span className={isClosed(pipeline) ? "text-muted-foreground" : "text-foreground"}>
-                          {formatCurrency(pValue)}
+                          {fmt(pValue)}
                         </span>
                         {isClosed(pipeline) && (
                           <span className="block text-xs text-muted-foreground font-normal">deal value</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-right text-muted-foreground">
-                        {isClosed(pipeline) ? "—" : formatCurrency(pExpected)}
+                        {isClosed(pipeline) ? "—" : fmt(pExpected)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Badge variant="secondary" className="text-xs">{pProposals.length}</Badge>
@@ -267,9 +268,9 @@ const PipelinePage: React.FC = () => {
                 <BarChart data={stageStats} margin={{ top: 5, right: 20, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 20% 92%)" />
                   <XAxis dataKey="stage" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" />
-                  <YAxis yAxisId="left" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="left" tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number, name: string) => [name === "value" ? formatCurrency(v) : v, name === "value" ? "Pipeline Value" : "Thread Count"]} />
+                  <Tooltip formatter={(v: number, name: string) => [name === "value" ? fmt(v) : v, name === "value" ? "Pipeline Value" : "Thread Count"]} />
                   <Bar yAxisId="left" dataKey="value" fill="hsl(18 100% 50%)" radius={[4, 4, 0, 0]} name="value" />
                   <Bar yAxisId="right" dataKey="count" fill="hsl(210 100% 56%)" radius={[4, 4, 0, 0]} name="count" />
                 </BarChart>
@@ -288,7 +289,7 @@ const PipelinePage: React.FC = () => {
                     </div>
                     <Badge variant="secondary">{stage.count} thread{stage.count !== 1 ? "s" : ""}</Badge>
                   </div>
-                  <p className="text-2xl font-bold text-foreground mt-2">{formatCurrency(stage.value)}</p>
+                  <p className="text-2xl font-bold text-foreground mt-2">{fmt(stage.value)}</p>
                   <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full"

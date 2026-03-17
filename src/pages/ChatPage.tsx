@@ -38,7 +38,8 @@ const SUGGESTED_QUERIES = [
 ];
 
 const ChatPage: React.FC = () => {
-  const { leads, companies, meetings, pipelines, proposals, users } = useApp();
+  const { leads, companies, meetings, pipelines, proposals, users, currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -72,7 +73,7 @@ const ChatPage: React.FC = () => {
           count: compLeads.length,
           items: compLeads.map((l) => {
             const myPipeline = pipelines.find((p) => p.leadId === l.id);
-            return { Prospect: l.prospectName, Stage: myPipeline?.stage || "No Pipeline", Value: formatCurrency(myPipeline ? pipelineValue(myPipeline.id) : 0) };
+            return { Prospect: l.prospectName, Stage: myPipeline?.stage || "No Pipeline", Value: fmt(myPipeline ? pipelineValue(myPipeline.id) : 0) };
           }),
           label: `Leads for ${companyMatch.name}`,
         },
@@ -83,8 +84,8 @@ const ChatPage: React.FC = () => {
     if (q.includes("total") && (q.includes("pipeline") || q.includes("proposal value") || q.includes("deal value"))) {
       const total = proposals.reduce((s, p) => s + p.value, 0);
       return {
-        text: `The **total pipeline value** is **${formatCurrency(total)}** across ${proposals.length} proposal(s).`,
-        data: { type: "value", value: formatCurrency(total), label: "Total Pipeline Value" },
+        text: `The **total pipeline value** is **${fmt(total)}** across ${proposals.length} proposal(s).`,
+        data: { type: "value", value: fmt(total), label: "Total Pipeline Value" },
       };
     }
 
@@ -92,8 +93,8 @@ const ChatPage: React.FC = () => {
     if (q.includes("forecast") || q.includes("expected revenue")) {
       const total = proposals.reduce((s, p) => s + p.expectedRevenue, 0);
       return {
-        text: `The **total revenue forecast** is **${formatCurrency(total)}**, weighted by probability across all active deals.`,
-        data: { type: "value", value: formatCurrency(total), label: "Revenue Forecast" },
+        text: `The **total revenue forecast** is **${fmt(total)}**, weighted by probability across all active deals.`,
+        data: { type: "value", value: fmt(total), label: "Revenue Forecast" },
       };
     }
 
@@ -132,7 +133,7 @@ const ChatPage: React.FC = () => {
             const company = companies.find((c) => c.id === l.companyId);
             const p = stagePipelines.find((p) => p.leadId === l.id);
             const owner = users.find((u) => u.id === p?.ownerId);
-            return { Prospect: l.prospectName, Company: company?.name || "—", Owner: owner?.name || "—", Value: formatCurrency(p ? pipelineValue(p.id) : 0) };
+            return { Prospect: l.prospectName, Company: company?.name || "—", Owner: owner?.name || "—", Value: fmt(p ? pipelineValue(p.id) : 0) };
           }),
           label: `${matchedStage} Leads`,
         },
@@ -144,14 +145,14 @@ const ChatPage: React.FC = () => {
       const wonPipelines = pipelines.filter((p) => p.stage === "Closed Won");
       const wonValue = wonPipelines.reduce((s, p) => s + pipelineValue(p.id), 0);
       return {
-        text: `We have **${wonPipelines.length} Closed Won** pipeline thread(s) worth **${formatCurrency(wonValue)}** total.`,
+        text: `We have **${wonPipelines.length} Closed Won** pipeline thread(s) worth **${fmt(wonValue)}** total.`,
         data: {
           type: "list",
           items: wonPipelines.map((p) => {
             const lead = leads.find((l) => l.id === p.leadId);
             const company = companies.find((c) => c.id === lead?.companyId);
             const owner = users.find((u) => u.id === p.ownerId);
-            return { Prospect: lead?.prospectName || "—", Company: company?.name || "—", Owner: owner?.name || "—", Value: formatCurrency(pipelineValue(p.id)) };
+            return { Prospect: lead?.prospectName || "—", Company: company?.name || "—", Owner: owner?.name || "—", Value: fmt(pipelineValue(p.id)) };
           }),
           label: "Closed Won Deals",
         },
@@ -163,8 +164,8 @@ const ChatPage: React.FC = () => {
       const withValue = proposals.filter((p) => p.value > 0);
       const avg = withValue.length ? withValue.reduce((s, p) => s + p.value, 0) / withValue.length : 0;
       return {
-        text: `The **average deal size** is **${formatCurrency(avg)}** based on ${withValue.length} proposal(s) with a value.`,
-        data: { type: "value", value: formatCurrency(avg), label: "Average Deal Size" },
+        text: `The **average deal size** is **${fmt(avg)}** based on ${withValue.length} proposal(s) with a value.`,
+        data: { type: "value", value: fmt(avg), label: "Average Deal Size" },
       };
     }
 
@@ -324,6 +325,8 @@ const FormattedText: React.FC<{ text: string }> = ({ text }) => {
 };
 
 const ResultCard: React.FC<{ data: QueryResult }> = ({ data }) => {
+  const { currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
   if (data.type === "value") {
     return (
       <Card className="shadow-card border-border">
@@ -362,8 +365,8 @@ const ResultCard: React.FC<{ data: QueryResult }> = ({ data }) => {
             <BarChart data={data.chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 20% 92%)" />
               <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-              <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 10 }} />
-              <Tooltip formatter={(v: number) => formatCurrency(v)} />
+              <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 10 }} />
+              <Tooltip formatter={(v: number) => fmt(v)} />
               <Bar dataKey="value" fill="hsl(18 100% 50%)" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

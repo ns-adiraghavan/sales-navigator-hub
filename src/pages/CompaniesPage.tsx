@@ -15,7 +15,8 @@ import { Plus, Search, Building2, MapPin, ChevronDown, ChevronUp } from "lucide-
 import LeadDetailDrawer from "@/components/LeadDetailDrawer";
 
 const CompaniesPage: React.FC = () => {
-  const { companies, leads, pipelines, proposals, addCompany } = useApp();
+  const { companies, leads, pipelines, proposals, addCompany, currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
@@ -81,7 +82,7 @@ const CompaniesPage: React.FC = () => {
                   </div>
                   <div className="text-right hidden md:block">
                     <p className="text-xs text-muted-foreground">Total Pipeline</p>
-                    <p className="font-bold text-primary">{formatCurrency(totalValue)}</p>
+                    <p className="font-bold text-primary">{fmt(totalValue)}</p>
                   </div>
                   {isExpanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
                 </div>

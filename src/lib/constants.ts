@@ -35,11 +35,19 @@ export const STAGE_DOT: Record<PipelineStage, string> = {
   "Closed Lost": "bg-red-500",
 };
 
-export const formatCurrency = (value?: number) => {
-  if (!value) return "—";
-  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-  return `$${value}`;
+export const formatCurrency = (value?: number, currency: "INR" | "USD" = "INR", usdToInrRate = 90) => {
+  if (value === undefined || value === null) return "—";
+  if (currency === "USD") {
+    const usd = value / usdToInrRate;
+    if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(1)}M`;
+    if (usd >= 1_000) return `$${(usd / 1_000).toFixed(0)}K`;
+    return `$${usd.toFixed(0)}`;
+  }
+  // INR — use Indian number system (lakhs / crores)
+  if (value >= 1_00_00_000) return `₹${(value / 1_00_00_000).toFixed(1)}Cr`;
+  if (value >= 1_00_000) return `₹${(value / 1_00_000).toFixed(1)}L`;
+  if (value >= 1_000) return `₹${(value / 1_000).toFixed(0)}K`;
+  return `₹${value}`;
 };
 
 export const generateId = () => Math.random().toString(36).substr(2, 9);

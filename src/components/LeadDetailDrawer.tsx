@@ -28,7 +28,9 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
     addMeeting, updateMeeting,
     getMyPipeline, getPipelinesForLead, upsertPipeline,
     getProposalsForPipeline, addProposal, updateProposal, deleteProposal,
+    currency, usdToInrRate,
   } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
 
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);
@@ -349,7 +351,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
                             </div>
                             <div>
                               <p className="text-muted-foreground">Total Value</p>
-                              <p className="font-semibold text-foreground">{formatCurrency(totalValue)}</p>
+                              <p className="font-semibold text-foreground">{fmt(totalValue)}</p>
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground">Updated {p.updatedAt}</p>
@@ -410,6 +412,8 @@ interface ProposalCardProps {
 const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isExpanded, onToggle, onUpdate, onDelete, canEdit }) => {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(proposal);
+  const { currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -436,7 +440,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isExpanded, onTog
           <span className="text-sm font-medium text-foreground truncate">{proposal.title}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-2">
-          <span className="text-sm font-bold text-primary">{formatCurrency(proposal.value)}</span>
+          <span className="text-sm font-bold text-primary">{fmt(proposal.value)}</span>
           <Badge className={`text-xs border ${STAGE_COLORS[proposal.stage]}`} variant="outline">{proposal.stage}</Badge>
           {isExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
         </div>
@@ -450,11 +454,11 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isExpanded, onTog
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div>
                   <p className="text-muted-foreground">Value</p>
-                  <p className="font-semibold">{formatCurrency(proposal.value)}</p>
+                  <p className="font-semibold">{fmt(proposal.value)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Expected</p>
-                  <p className="font-semibold">{formatCurrency(proposal.expectedRevenue)}</p>
+                  <p className="font-semibold">{fmt(proposal.expectedRevenue)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Probability</p>

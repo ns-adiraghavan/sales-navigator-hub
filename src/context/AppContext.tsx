@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState } from "react";
 import { User, Lead, Company, Meeting, Proposal, UserPipeline, TeamLink } from "@/data/types";
 import { CURRENT_USER, USERS, COMPANIES, LEADS, MEETINGS, PROPOSALS, USER_PIPELINES, TEAM_LINKS } from "@/data/mockData";
 
+export type CurrencyCode = "INR" | "USD";
+
 interface AppState {
   currentUser: User;
   users: User[];
@@ -11,6 +13,12 @@ interface AppState {
   proposals: Proposal[];
   pipelines: UserPipeline[];
   teamLinks: TeamLink[];
+  /** Active display currency */
+  currency: CurrencyCode;
+  /** Exchange rate: 1 USD = N INR (admin-configurable) */
+  usdToInrRate: number;
+  setCurrency: (c: CurrencyCode) => void;
+  setUsdToInrRate: (rate: number) => void;
   setCurrentUser: (u: User) => void;
   addLead: (lead: Lead) => void;
   updateLead: (lead: Lead) => void;
@@ -59,6 +67,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [proposals, setProposals] = useState<Proposal[]>(PROPOSALS);
   const [pipelines, setPipelines] = useState<UserPipeline[]>(USER_PIPELINES);
   const [teamLinks, setTeamLinks] = useState<TeamLink[]>(TEAM_LINKS);
+  const [currency, setCurrency] = useState<CurrencyCode>("INR");
+  const [usdToInrRate, setUsdToInrRate] = useState<number>(90);
 
   const addLead = (lead: Lead) => setLeads((prev) => [...prev, lead]);
   const updateLead = (lead: Lead) =>
@@ -164,6 +174,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider
       value={{
         currentUser, users, companies, leads, meetings, proposals, pipelines, teamLinks,
+        currency, usdToInrRate, setCurrency, setUsdToInrRate,
         setCurrentUser,
         addLead, updateLead, deleteLead,
         addMeeting, updateMeeting, deleteMeeting,
