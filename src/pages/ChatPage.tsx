@@ -84,8 +84,8 @@ const ChatPage: React.FC = () => {
     if (q.includes("total") && (q.includes("pipeline") || q.includes("proposal value") || q.includes("deal value"))) {
       const total = proposals.reduce((s, p) => s + p.value, 0);
       return {
-        text: `The **total pipeline value** is **${formatCurrency(total)}** across ${proposals.length} proposal(s).`,
-        data: { type: "value", value: formatCurrency(total), label: "Total Pipeline Value" },
+        text: `The **total pipeline value** is **${fmt(total)}** across ${proposals.length} proposal(s).`,
+        data: { type: "value", value: fmt(total), label: "Total Pipeline Value" },
       };
     }
 
