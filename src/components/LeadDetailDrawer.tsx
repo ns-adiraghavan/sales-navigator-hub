@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { Lead, UserPipeline, PipelineStage, Proposal } from "@/data/types";
+import { PipelineStage, Proposal } from "@/data/types";
 import { PIPELINE_STAGES, STAGE_COLORS, formatCurrency, generateId } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,7 @@ interface LeadDetailDrawerProps {
 const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, defaultTab = "overview" }) => {
   const {
     leads, companies, users, meetings, currentUser,
-    updateLead, addMeeting, updateMeeting,
+    addMeeting, updateMeeting,
     getMyPipeline, getPipelinesForLead, upsertPipeline,
     getProposalsForPipeline, addProposal, updateProposal, deleteProposal,
   } = useApp();
@@ -167,6 +167,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
               ) : (
                 leadMeetings.map((meeting) => {
                   const scheduler = users.find((u) => u.id === meeting.scheduledById);
+                  const canEditMeeting = currentUser.role === "admin" || meeting.scheduledById === currentUser.id;
                   return (
                     <div key={meeting.id} className="border border-border rounded-lg p-4 space-y-2">
                       <div className="flex items-start justify-between">
@@ -182,14 +183,14 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
                             </p>
                           )}
                         </div>
-                        {(currentUser.role === "admin" || meeting.scheduledById === currentUser.id) && (
+                        {canEditMeeting && (
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditMeeting(meeting); setShowMeetingModal(true); }}>
                             <Pencil size={11} />
                           </Button>
                         )}
                       </div>
                       {meeting.outcome && (
-                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">{meeting.outcome}</Badge>
+                        <Badge variant="outline" className="text-xs border-primary/30 bg-primary/5 text-primary">{meeting.outcome}</Badge>
                       )}
                       {meeting.notes && <p className="text-xs text-muted-foreground">{meeting.notes}</p>}
                       {meeting.minutes && (
@@ -198,6 +199,48 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
                           <p className="text-xs text-foreground">{meeting.minutes}</p>
                         </div>
                       )}
+
+                      {/* PDF / doc attachment */}
+                      <div className="pt-1">
+                        {meeting.attachmentName ? (
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={meeting.attachmentUrl}
+                              download={meeting.attachmentName}
+                              className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <FileText size={12} />{meeting.attachmentName}
+                            </a>
+                            {canEditMeeting && (
+                              <button
+                                className="text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                                onClick={() => updateMeeting({ ...meeting, attachmentName: undefined, attachmentUrl: undefined })}
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          canEditMeeting && (
+                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors">
+                              <Upload size={12} />
+                              <span>Attach meeting notes (PDF)</span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept=".pdf,.doc,.docx"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const url = URL.createObjectURL(file);
+                                  updateMeeting({ ...meeting, attachmentName: file.name, attachmentUrl: url });
+                                }}
+                              />
+                            </label>
+                          )
+                        )}
+                      </div>
                     </div>
                   );
                 })
