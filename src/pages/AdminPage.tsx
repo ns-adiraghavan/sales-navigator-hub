@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { User, UserRole } from "@/data/types";
-import { generateId } from "@/lib/constants";
+import { generateId, STAGE_COLORS } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, Shield, Users, Building2, Lock, GitBranch, ArrowRight, X } from "lucide-react";
-import { STAGE_COLORS } from "@/lib/constants";
+import { Plus, Pencil, Trash2, Shield, Users, Building2, Lock, GitBranch, ArrowRight, X, Settings, RefreshCw } from "lucide-react";
 
 const ROLE_BADGE: Record<UserRole, { label: string; className: string }> = {
   admin:      { label: "Admin",      className: "bg-destructive/10 text-destructive border-destructive/20" },
