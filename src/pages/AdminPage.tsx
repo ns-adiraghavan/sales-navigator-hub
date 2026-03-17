@@ -387,10 +387,58 @@ const AdminPage: React.FC = () => {
             </div>
           </Card>
         </TabsContent>
-      </Tabs>
 
-      {/* ─── Settings tab ─── */}
-      
+        {/* ─── Settings tab ─── */}
+        <TabsContent value="settings" className="mt-4">
+          <Card className="shadow-card border-border max-w-lg">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Settings size={16} className="text-primary" />Platform Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Currency exchange rate */}
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Currency Exchange Rate</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Set the USD → INR conversion rate used across all currency displays.
+                    All values are stored in INR.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/40 px-3 py-2 rounded-md font-mono">
+                    1 USD =
+                  </div>
+                  <Input
+                    type="number"
+                    min={1}
+                    step={0.5}
+                    value={rateInput}
+                    onChange={(e) => setRateInput(e.target.value)}
+                    className="w-28 font-mono"
+                    placeholder="90"
+                  />
+                  <div className="text-sm text-muted-foreground">INR</div>
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      const v = parseFloat(rateInput);
+                      if (!isNaN(v) && v > 0) setUsdToInrRate(v);
+                    }}
+                  >
+                    <RefreshCw size={13} />Apply
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Current rate: <span className="font-semibold text-foreground">1 USD = {usdToInrRate} INR</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* User modal */}
       <UserFormModal
