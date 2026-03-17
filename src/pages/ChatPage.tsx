@@ -133,7 +133,7 @@ const ChatPage: React.FC = () => {
             const company = companies.find((c) => c.id === l.companyId);
             const p = stagePipelines.find((p) => p.leadId === l.id);
             const owner = users.find((u) => u.id === p?.ownerId);
-            return { Prospect: l.prospectName, Company: company?.name || "—", Owner: owner?.name || "—", Value: formatCurrency(p ? pipelineValue(p.id) : 0) };
+            return { Prospect: l.prospectName, Company: company?.name || "—", Owner: owner?.name || "—", Value: fmt(p ? pipelineValue(p.id) : 0) };
           }),
           label: `${matchedStage} Leads`,
         },
