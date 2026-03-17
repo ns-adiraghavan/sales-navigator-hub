@@ -325,6 +325,8 @@ const FormattedText: React.FC<{ text: string }> = ({ text }) => {
 };
 
 const ResultCard: React.FC<{ data: QueryResult }> = ({ data }) => {
+  const { currency, usdToInrRate } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
   if (data.type === "value") {
     return (
       <Card className="shadow-card border-border">
