@@ -12,7 +12,8 @@ const CHART_COLORS = ["#ff5c35", "#3b82f6", "#22c55e", "#8b5cf6", "#f59e0b", "#e
 const STAGE_ORDER = ["New Lead", "Contacted", "Discovery", "Proposal Sent", "Negotiation", "Closed Won", "Closed Lost"] as const;
 
 const DashboardPage: React.FC = () => {
-  const { leads, meetings, companies, pipelines, proposals } = useApp();
+  const { leads, meetings, companies, pipelines, proposals, currency, usdToInrRate, setCurrency } = useApp();
+  const fmt = (v?: number) => formatCurrency(v, currency, usdToInrRate);
 
   const today = new Date().toISOString().split("T")[0];
   const weekEnd = new Date();
