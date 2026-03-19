@@ -72,6 +72,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [teamLinks, setTeamLinks] = useState<TeamLink[]>(TEAM_LINKS);
   const [currency, setCurrency] = useState<CurrencyCode>("INR");
   const [usdToInrRate, setUsdToInrRate] = useState<number>(90);
+  const [inactivityDays, setInactivityDays] = useState<number>(7);
 
   const addLead = (lead: Lead) => setLeads((prev) => [...prev, lead]);
   const updateLead = (lead: Lead) =>
