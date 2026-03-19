@@ -123,5 +123,5 @@ export function useNudges(): Nudge[] {
         return true;
       })
       .sort((a, b) => (a.severity === "warning" ? -1 : 1) - (b.severity === "warning" ? -1 : 1));
-  }, [leads, companies, meetings, pipelines, currentUser.id, today.toISOString().split("T")[0]]);
+  }, [leads, companies, meetings, pipelines, currentUser.id, inactivityDays, today.toISOString().split("T")[0]]);
 }
