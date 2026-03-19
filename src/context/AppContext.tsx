@@ -74,7 +74,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [usdToInrRate, setUsdToInrRate] = useState<number>(90);
   const [inactivityDays, setInactivityDays] = useState<number>(7);
 
-  const addLead = (lead: Lead) => setLeads((prev) => [...prev, lead]);
+  const addLead = (lead: Lead) =>
+    setLeads((prev) => {
+      // Enforce email uniqueness — silently skip if the same email already exists
+      const duplicate = prev.find((l) => l.email.toLowerCase() === lead.email.toLowerCase());
+      if (duplicate) return prev;
+      return [...prev, lead];
+    });
   const updateLead = (lead: Lead) =>
     setLeads((prev) => prev.map((l) => (l.id === lead.id ? lead : l)));
   const deleteLead = (id: string) => setLeads((prev) => prev.filter((l) => l.id !== id));

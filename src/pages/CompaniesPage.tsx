@@ -178,7 +178,7 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onSave
   const handleSave = () => {
     if (!form.name || !form.industry) return;
     onSave({
-      id: generateId(),
+      id: generateId("company"),
       name: form.name!,
       industry: form.industry as Industry,
       website: form.website,

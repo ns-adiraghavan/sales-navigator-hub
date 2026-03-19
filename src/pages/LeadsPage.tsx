@@ -426,7 +426,7 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
   const handleCreateCompany = () => {
     if (!newCompanyName.trim()) return;
     const company: Company = {
-      id: generateId(),
+      id: generateId("company"),
       name: newCompanyName.trim(),
       industry: newCompanyIndustry.trim() || "Other",
       createdAt: new Date().toISOString().split("T")[0],
@@ -451,7 +451,7 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
     }
 
     const newLead: Lead = {
-      id: lead?.id || generateId(),
+      id: lead?.id || generateId("lead"),
       prospectName: form.prospectName!,
       companyId: form.companyId!,
       email: form.email!,
@@ -464,7 +464,7 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
 
     // Create an initial pipeline thread for the current user (only on new lead)
     const pipeline: UserPipeline | undefined = !lead ? {
-      id: generateId(),
+      id: generateId("pipeline"),
       leadId: newLead.id,
       ownerId: currentUser.id,
       stage: "New Lead",
