@@ -516,7 +516,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ open, user, users, onClos
   const handleSave = () => {
     if (!form.name || !form.email) return;
     onSave({
-      id: user?.id || generateId(),
+      id: user?.id || generateId("user"),
       name: form.name!,
       email: form.email!,
       role: (form.role as UserRole) || "sales",

@@ -426,7 +426,7 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
   const handleCreateCompany = () => {
     if (!newCompanyName.trim()) return;
     const company: Company = {
-      id: generateId(),
+      id: generateId("company"),
       name: newCompanyName.trim(),
       industry: newCompanyIndustry.trim() || "Other",
       createdAt: new Date().toISOString().split("T")[0],

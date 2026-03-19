@@ -311,7 +311,7 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({ open, meetin
   const handleSave = () => {
     if (!form.title || !form.leadId || !form.date || !form.time) return;
     onSave({
-      id: meeting?.id || generateId(),
+      id: meeting?.id || generateId("meeting"),
       title: form.title!,
       leadId: form.leadId!,
       scheduledById: meeting?.scheduledById || currentUser.id,
