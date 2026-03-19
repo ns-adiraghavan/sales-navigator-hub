@@ -30,6 +30,7 @@ const navItems = [
 
 const adminNavItems = [
   { to: "/admin", label: "Admin", icon: Shield },
+  { to: "/dev-reference", label: "Dev Reference", icon: Code2 },
 ];
 
 const AppLayout: React.FC = () => {
