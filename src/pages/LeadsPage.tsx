@@ -451,7 +451,7 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
     }
 
     const newLead: Lead = {
-      id: lead?.id || generateId(),
+      id: lead?.id || generateId("lead"),
       prospectName: form.prospectName!,
       companyId: form.companyId!,
       email: form.email!,
