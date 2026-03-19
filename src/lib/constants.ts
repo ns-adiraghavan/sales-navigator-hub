@@ -50,7 +50,10 @@ export const formatCurrency = (value?: number, currency: "INR" | "USD" = "INR", 
   return `₹${value}`;
 };
 
-export const generateId = () => Math.random().toString(36).substr(2, 9);
+const _seq = () => Math.random().toString(36).substr(2, 7);
+
+export const generateId = (prefix?: "user" | "company" | "lead" | "pipeline" | "proposal" | "meeting") =>
+  prefix ? `${prefix}_${_seq()}` : _seq();
 
 /**
  * Returns the display value for a pipeline thread:
