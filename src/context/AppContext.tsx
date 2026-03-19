@@ -17,8 +17,11 @@ interface AppState {
   currency: CurrencyCode;
   /** Exchange rate: 1 USD = N INR (admin-configurable) */
   usdToInrRate: number;
+  /** Pipeline inactivity nudge threshold in days (admin-configurable) */
+  inactivityDays: number;
   setCurrency: (c: CurrencyCode) => void;
   setUsdToInrRate: (rate: number) => void;
+  setInactivityDays: (days: number) => void;
   setCurrentUser: (u: User) => void;
   addLead: (lead: Lead) => void;
   updateLead: (lead: Lead) => void;
@@ -69,6 +72,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [teamLinks, setTeamLinks] = useState<TeamLink[]>(TEAM_LINKS);
   const [currency, setCurrency] = useState<CurrencyCode>("INR");
   const [usdToInrRate, setUsdToInrRate] = useState<number>(90);
+  const [inactivityDays, setInactivityDays] = useState<number>(7);
 
   const addLead = (lead: Lead) => setLeads((prev) => [...prev, lead]);
   const updateLead = (lead: Lead) =>
@@ -175,6 +179,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         currentUser, users, companies, leads, meetings, proposals, pipelines, teamLinks,
         currency, usdToInrRate, setCurrency, setUsdToInrRate,
+        inactivityDays, setInactivityDays,
         setCurrentUser,
         addLead, updateLead, deleteLead,
         addMeeting, updateMeeting, deleteMeeting,

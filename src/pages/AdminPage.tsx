@@ -28,8 +28,9 @@ const ROLE_PERMISSIONS: Record<UserRole, string> = {
 };
 
 const AdminPage: React.FC = () => {
-  const { currentUser, users, leads, companies, pipelines, teamLinks, addUser, updateUser, deleteUser, upsertTeamLink, removeTeamLink, usdToInrRate, setUsdToInrRate } = useApp();
+  const { currentUser, users, leads, companies, pipelines, teamLinks, addUser, updateUser, deleteUser, upsertTeamLink, removeTeamLink, usdToInrRate, setUsdToInrRate, inactivityDays, setInactivityDays } = useApp();
   const [rateInput, setRateInput] = useState(String(usdToInrRate));
+  const [inactivityInput, setInactivityInput] = useState(String(inactivityDays));
   const [showUserModal, setShowUserModal] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
 
@@ -433,6 +434,44 @@ const AdminPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Current rate: <span className="font-semibold text-foreground">1 USD = {usdToInrRate} INR</span>
+                </p>
+              </div>
+
+              <div className="border-t border-border pt-5 space-y-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Pipeline Inactivity Reminder</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Number of days without a pipeline update before a nudge is triggered for the sales team.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/40 px-3 py-2 rounded-md font-mono">
+                    Remind after
+                  </div>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={90}
+                    step={1}
+                    value={inactivityInput}
+                    onChange={(e) => setInactivityInput(e.target.value)}
+                    className="w-24 font-mono"
+                    placeholder="7"
+                  />
+                  <div className="text-sm text-muted-foreground">days inactive</div>
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      const v = parseInt(inactivityInput, 10);
+                      if (!isNaN(v) && v > 0) setInactivityDays(v);
+                    }}
+                  >
+                    <RefreshCw size={13} />Apply
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Current threshold: <span className="font-semibold text-foreground">{inactivityDays} days</span>
                 </p>
               </div>
             </CardContent>
