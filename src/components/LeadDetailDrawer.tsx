@@ -54,7 +54,7 @@ const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({ leadId, onClose, de
   const handlePipelineStageChange = (stage: PipelineStage) => {
     if (!myPipeline) {
       upsertPipeline({
-        id: generateId(),
+        id: generateId("pipeline"),
         leadId,
         ownerId: currentUser.id,
         stage,
