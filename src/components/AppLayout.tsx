@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell, Zap,
+  LayoutDashboard, Users, Building2, Calendar, GitBranch, MessageSquare, Shield, Menu, X, ChevronLeft, ChevronRight, Bell, Zap, Code2,
 } from "lucide-react";
 import { SidebarNavLink } from "@/components/SidebarNavLink";
 import { useApp } from "@/context/AppContext";
@@ -30,6 +30,7 @@ const navItems = [
 
 const adminNavItems = [
   { to: "/admin", label: "Admin", icon: Shield },
+  { to: "/dev-reference", label: "Dev Reference", icon: Code2 },
 ];
 
 const AppLayout: React.FC = () => {

@@ -13,6 +13,7 @@ import PipelinePage from "@/pages/PipelinePage";
 import ChatPage from "@/pages/ChatPage";
 import AdminPage from "@/pages/AdminPage";
 import PendingActionsPage from "@/pages/PendingActionsPage";
+import DevReferencePage from "@/pages/DevReferencePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/pipeline" element={<PipelinePage />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/dev-reference" element={<DevReferencePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
