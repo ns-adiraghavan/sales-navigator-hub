@@ -464,7 +464,7 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({ open, lead, onClos
 
     // Create an initial pipeline thread for the current user (only on new lead)
     const pipeline: UserPipeline | undefined = !lead ? {
-      id: generateId(),
+      id: generateId("pipeline"),
       leadId: newLead.id,
       ownerId: currentUser.id,
       stage: "New Lead",
