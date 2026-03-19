@@ -19,11 +19,11 @@ export interface Nudge {
   severity: "warning" | "info";
 }
 
-const INACTIVE_DAYS = 7;
 const CLOSED_STAGES = new Set(["Closed Won", "Closed Lost"]);
 
 export function useNudges(): Nudge[] {
-  const { leads, companies, meetings, pipelines, currentUser } = useApp();
+  const { leads, companies, meetings, pipelines, currentUser, inactivityDays } = useApp();
+  const INACTIVE_DAYS = inactivityDays;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

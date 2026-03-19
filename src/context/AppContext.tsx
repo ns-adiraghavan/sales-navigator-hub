@@ -17,8 +17,11 @@ interface AppState {
   currency: CurrencyCode;
   /** Exchange rate: 1 USD = N INR (admin-configurable) */
   usdToInrRate: number;
+  /** Pipeline inactivity nudge threshold in days (admin-configurable) */
+  inactivityDays: number;
   setCurrency: (c: CurrencyCode) => void;
   setUsdToInrRate: (rate: number) => void;
+  setInactivityDays: (days: number) => void;
   setCurrentUser: (u: User) => void;
   addLead: (lead: Lead) => void;
   updateLead: (lead: Lead) => void;
